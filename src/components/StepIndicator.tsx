@@ -14,23 +14,23 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => {
   ]
 
   return (
-    <div className="w-full mx-auto px-4 mb-8">
-      <div className="bg-white rounded-xl shadow-xl p-6 border-2 border-yellow-400">
+    <div className="w-full mx-auto px-4 mb-6">
+      <div className="bg-white rounded-xl shadow-xl p-4 border-2 border-yellow-400">
         <div className="flex items-center justify-between">
           {steps.map((step, index) => (
             <div key={step.id} className="flex items-center flex-1">
               <div className="flex flex-col items-center w-full">
                 <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-3 transition-all duration-300 ${
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-base border-2 transition-all duration-300 ${
                     currentStep >= step.id
                       ? 'bg-yellow-400 text-black border-yellow-400 shadow-lg'
                       : 'bg-gray-100 text-gray-400 border-gray-300'
                   }`}
                 >
-                  {currentStep > step.id ? <Check size={20} /> : step.id}
+                  {currentStep > step.id ? <Check size={16} /> : step.id}
                 </div>
-                <div className="text-center mt-3">
-                  <p className={`text-sm font-bold ${
+                <div className="text-center mt-2">
+                  <p className={`text-xs font-bold ${
                     currentStep >= step.id ? 'text-black' : 'text-gray-400'
                   }`}>
                     {step.title}
@@ -42,7 +42,7 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => {
               </div>
               {index < steps.length - 1 && (
                 <div
-                  className={`flex-1 h-1 mx-4 transition-all duration-300 ${
+                  className={`flex-1 h-1 mx-3 transition-all duration-300 ${
                     currentStep > step.id ? 'bg-yellow-400' : 'bg-gray-300'
                   }`}
                 />

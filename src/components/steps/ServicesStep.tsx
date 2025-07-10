@@ -44,18 +44,18 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
     const IconComponent = getServiceIcon(service.id)
     
     return (
-      <div className="bg-white rounded-xl p-6 border-2 border-gray-200 hover:border-yellow-400 transition-all duration-200 hover:shadow-lg transform hover:-translate-y-1">
-        <div className="flex items-start justify-between mb-4">
+      <div className="bg-white rounded-xl p-4 border-2 border-gray-200 hover:border-yellow-400 transition-all duration-200 hover:shadow-lg transform hover:-translate-y-1">
+        <div className="flex items-start justify-between mb-3">
           <div className="flex items-center">
-            <div className="mr-4 flex items-center justify-center">
+            <div className="mr-3 flex items-center justify-center">
               <IconComponent 
-                size={48} 
+                size={32} 
                 className="text-yellow-600"
               />
             </div>
             <div>
-              <h3 className="text-xl font-bold text-black">{service.name}</h3>
-              <p className="text-base text-gray-700 mt-2">{service.description}</p>
+              <h3 className="text-base font-bold text-black">{service.name}</h3>
+              <p className="text-sm text-gray-700 mt-1">{service.description}</p>
             </div>
           </div>
           <label className="flex items-center cursor-pointer">
@@ -63,23 +63,18 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
               type="checkbox"
               checked={service.selected}
               onChange={() => toggleServiceItem(service.id)}
-              className="w-6 h-6 text-yellow-400 bg-gray-100 border-gray-300 rounded focus:ring-yellow-400 focus:ring-2"
+              className="w-5 h-5 text-yellow-400 bg-gray-100 border-gray-300 rounded focus:ring-yellow-400 focus:ring-2"
             />
           </label>
         </div>
         
-        <div className="space-y-3">
-          {/* {service.pricePerSqFt > 0 && (
-            <div className="text-base text-gray-700">
-              <span className="font-bold">Rate:</span> ₹{service.pricePerSqFt}/sq.ft
-            </div>
-          )} */}
+        <div className="space-y-2">
           {service.basePrice > 0 && (
-            <div className="text-base text-gray-700">
+            <div className="text-sm text-gray-700">
               <span className="font-bold">Base Price:</span> ₹{service.basePrice.toLocaleString()}
             </div>
           )}
-          <div className="text-xl font-bold text-black bg-yellow-100 px-4 py-2 rounded-lg">
+          <div className="text-base font-bold text-black bg-yellow-100 px-3 py-1 rounded-lg">
             Total: ₹{calculateServicePrice(service).toLocaleString()}
           </div>
         </div>
@@ -92,18 +87,18 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
 
   return (
     <div className="w-full mx-auto px-4">
-      <div className="bg-white rounded-xl shadow-xl p-8 border-2 border-yellow-400 max-w-6xl mx-auto">
-        <div className="text-center mb-8">
-          <h2 className="text-4xl font-bold text-black mb-4">
+      <div className="bg-white rounded-xl shadow-xl p-6 border-2 border-yellow-400 max-w-5xl mx-auto">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-black mb-3">
             Optional Services
           </h2>
-          <p className="text-gray-700 text-lg">
+          <p className="text-gray-700 text-base">
             Select additional services to enhance your interior design
           </p>
         </div>
 
         {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {serviceItems.map((service) => (
             <ServiceCard key={service.id} service={service} />
           ))}
@@ -111,30 +106,30 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
 
         {/* Selected Services Summary */}
         {selectedServices.length > 0 && (
-          <div className="mb-8 bg-yellow-50 rounded-xl p-6 border-2 border-yellow-400">
-            <h4 className="text-xl font-bold text-black mb-4">
+          <div className="mb-6 bg-yellow-50 rounded-xl p-4 border-2 border-yellow-400">
+            <h4 className="text-base font-bold text-black mb-3">
               Selected Services Summary
             </h4>
-            <div className="space-y-4">
+            <div className="space-y-3">
               {selectedServices.map((service) => (
-                <div key={service.id} className="flex justify-between items-center bg-white rounded-lg p-4 border-2 border-yellow-300 shadow-md">
+                <div key={service.id} className="flex justify-between items-center bg-white rounded-lg p-3 border-2 border-yellow-300 shadow-md">
                   <div>
-                    <div className="font-bold text-lg text-black">{service.name}</div>
-                    <div className="text-base text-gray-700">{service.description}</div>
+                    <div className="font-bold text-base text-black">{service.name}</div>
+                    <div className="text-sm text-gray-700">{service.description}</div>
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-xl text-black">
+                    <div className="font-bold text-base text-black">
                       ₹{calculateServicePrice(service).toLocaleString()}
                     </div>
                   </div>
                 </div>
               ))}
-              <div className="border-t-2 border-yellow-400 pt-4">
-                <div className="flex justify-between items-center bg-black rounded-lg p-4">
-                  <div className="text-xl font-bold text-yellow-400">
+              <div className="border-t-2 border-yellow-400 pt-3">
+                <div className="flex justify-between items-center bg-black rounded-lg p-3">
+                  <div className="text-base font-bold text-yellow-400">
                     Total Services Cost:
                   </div>
-                  <div className="text-2xl font-bold text-yellow-400">
+                  <div className="text-lg font-bold text-yellow-400">
                     ₹{totalServiceCost.toLocaleString()}
                   </div>
                 </div>
@@ -144,14 +139,14 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
         )}
 
         {/* Service Details */}
-        <div className="mb-8 bg-gray-50 rounded-xl p-6 border-2 border-gray-200">
-          <h4 className="text-xl font-bold text-black mb-4">
+        <div className="mb-6 bg-gray-50 rounded-xl p-4 border-2 border-gray-200">
+          <h4 className="text-base font-bold text-black mb-3">
             Service Details
           </h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-base text-gray-700">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-700">
             <div>
               <div className="font-bold">Carpet Area:</div>
-              <div className="text-lg font-medium">{carpetArea} sq.ft</div>
+              <div className="text-base font-medium">{carpetArea} sq.ft</div>
             </div>
             <div>
               <div className="font-bold">Applicable Services:</div>
@@ -164,13 +159,13 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
         <div className="flex justify-between">
           <button
             onClick={onPrev}
-            className="px-8 py-4 text-lg font-bold rounded-xl border-2 border-black text-black hover:bg-black hover:text-yellow-400 transition-all duration-300 transform hover:-translate-y-1"
+            className="px-6 py-3 text-base font-bold rounded-xl border-2 border-black text-black hover:bg-black hover:text-yellow-400 transition-all duration-300 transform hover:-translate-y-1"
           >
             ← Previous
           </button>
           <button
             onClick={onNext}
-            className="px-8 py-4 text-lg font-bold rounded-xl bg-black text-yellow-400 hover:bg-gray-800 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+            className="px-6 py-3 text-base font-bold rounded-xl bg-black text-yellow-400 hover:bg-gray-800 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
           >
             Continue to Details →
           </button>

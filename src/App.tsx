@@ -90,9 +90,9 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
       <Header />
-      <div className="w-full mx-auto px-4 py-8">
+      <div className="w-full mx-auto px-4 py-6">
         <StepIndicator currentStep={appState.currentStep} />
-        <div className="mt-8">
+        <div className="mt-4">
           {renderCurrentStep()}
         </div>
       </div>
