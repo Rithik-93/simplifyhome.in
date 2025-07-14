@@ -24,6 +24,22 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
     const newEstimate: EstimateItem[] = []
     let totalPrice = 0
 
+    // Add single line items to estimate
+    const selectedSingleLineItems = appState.singleLineItems.filter(item => item.selected)
+    if (selectedSingleLineItems.length > 0) {
+      const singleLineItemsFormatted = selectedSingleLineItems.map(item => ({
+        name: item.name,
+        price: item.totalPrice || 0
+      }))
+      const singleLineTotal = singleLineItemsFormatted.reduce((sum, item) => sum + item.price, 0)
+      newEstimate.push({
+        category: 'Single Line Items',
+        items: singleLineItemsFormatted,
+        totalPrice: singleLineTotal
+      })
+      totalPrice += singleLineTotal
+    }
+
     // Group furniture items by category
     const furnitureByCategory = appState.furnitureItems
       .filter(item => item.selected)

@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import type { AppState, FurnitureItem, ServiceItem, UserDetails } from './types'
-import { DEFAULT_FURNITURE_ITEMS, DEFAULT_SERVICE_ITEMS } from './types'
+import type { AppState, FurnitureItem, SingleLineItem, ServiceItem, UserDetails } from './types'
+import { DEFAULT_FURNITURE_ITEMS, DEFAULT_SINGLE_LINE_ITEMS, DEFAULT_SERVICE_ITEMS } from './types'
 import HomeTypeStep from './components/steps/HomeTypeStep'
 import FurnitureStep from './components/steps/FurnitureStep'
 import ServicesStep from './components/steps/ServicesStep'
@@ -14,6 +14,7 @@ function App() {
     currentStep: 1,
     homeDetails: { homeType: '', qualityTier: '', carpetArea: 0 },
     furnitureItems: DEFAULT_FURNITURE_ITEMS,
+    singleLineItems: DEFAULT_SINGLE_LINE_ITEMS,
     serviceItems: DEFAULT_SERVICE_ITEMS,
     userDetails: { name: '', mobile: '', email: '', city: '' },
     estimate: [],
@@ -50,8 +51,10 @@ function App() {
         return (
           <FurnitureStep
             furnitureItems={appState.furnitureItems}
+            singleLineItems={appState.singleLineItems}
             homeDetails={appState.homeDetails}
-            onUpdate={(furnitureItems: FurnitureItem[]) => updateAppState({ furnitureItems })}
+            onUpdateFurniture={(furnitureItems: FurnitureItem[]) => updateAppState({ furnitureItems })}
+            onUpdateSingleLine={(singleLineItems: SingleLineItem[]) => updateAppState({ singleLineItems })}
             onNext={nextStep}
             onPrev={prevStep}
           />

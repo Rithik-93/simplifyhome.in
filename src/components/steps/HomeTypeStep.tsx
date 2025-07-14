@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Building, Building2, Crown, Gem } from 'lucide-react'
+import { Building, Building2, Crown, Gem, Home } from 'lucide-react'
 import type { HomeDetails } from '../../types'
 
 interface HomeTypeStepProps {
@@ -9,8 +9,7 @@ interface HomeTypeStepProps {
 }
 
 const HomeTypeStep: React.FC<HomeTypeStepProps> = ({ homeDetails, onUpdate, onNext }) => {
-  const [_, setCarpetAreaInput] = useState(homeDetails.carpetArea.toString())
-  const [isManualArea] = useState(false)
+  const [carpetAreaInput, setCarpetAreaInput] = useState(homeDetails.carpetArea.toString())
 
   const qualityTiers = [
     { value: 'Premium', label: 'Premium', icon: Crown, description: 'High-quality materials and finishes' },
@@ -18,8 +17,8 @@ const HomeTypeStep: React.FC<HomeTypeStepProps> = ({ homeDetails, onUpdate, onNe
   ] as const
 
   const homeTypes = [
-    { value: '2BHK', label: '2 BHK', icon: Building, defaultArea: 2500 },
-    { value: '3BHK', label: '3 BHK', icon: Building2, defaultArea: 2300 },
+    { value: '2BHK', label: '2 BHK', icon: Building },
+    { value: '3BHK', label: '3 BHK', icon: Building2 },
   ] as const
 
   const handleQualityTierSelect = (qualityTier: HomeDetails['qualityTier']) => {
@@ -27,15 +26,13 @@ const HomeTypeStep: React.FC<HomeTypeStepProps> = ({ homeDetails, onUpdate, onNe
   }
 
   const handleHomeTypeSelect = (homeType: HomeDetails['homeType']) => {
-    const selectedType = homeTypes.find(type => type.value === homeType)
-    const defaultArea = selectedType?.defaultArea || 0
-    
-    if (!isManualArea) {
-      setCarpetAreaInput(defaultArea.toString())
-      onUpdate({ ...homeDetails, homeType, carpetArea: defaultArea })
-    } else {
-      onUpdate({ ...homeDetails, homeType })
-    }
+    onUpdate({ ...homeDetails, homeType })
+  }
+
+  const handleCarpetAreaChange = (value: string) => {
+    setCarpetAreaInput(value)
+    const numValue = parseInt(value) || 0
+    onUpdate({ ...homeDetails, carpetArea: numValue })
   }
 
   const handleNext = () => {
@@ -128,7 +125,6 @@ const HomeTypeStep: React.FC<HomeTypeStepProps> = ({ homeDetails, onUpdate, onNe
                       />
                       <div className="text-left flex-1">
                         <div className="font-semibold text-sm sm:text-base">{type.label}</div>
-                        <div className="text-xs sm:text-sm text-gray-600">{type.defaultArea} sq. ft</div>
                       </div>
                     </button>
                   </div>
@@ -137,6 +133,35 @@ const HomeTypeStep: React.FC<HomeTypeStepProps> = ({ homeDetails, onUpdate, onNe
             </div>
           </div>
         </div>
+
+        {/* Carpet Area Section - Only show if home type is selected */}
+        {homeDetails.homeType && (
+          <div className="mb-4 sm:mb-6">
+            <div className="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
+              <h3 className="text-sm sm:text-base font-semibold text-black mb-2 sm:mb-3 flex items-center">
+                <Home className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-yellow-600" />
+                Carpet Area <span className="text-red-500 ml-1">*</span>
+              </h3>
+              <div className="px-1 sm:px-2 py-1">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    placeholder="Enter carpet area"
+                    value={carpetAreaInput}
+                    onChange={(e) => handleCarpetAreaChange(e.target.value)}
+                    className="flex-1 px-3 sm:px-4 py-2 sm:py-3 border-2 border-gray-300 rounded-lg focus:border-yellow-400 focus:outline-none transition-colors text-sm sm:text-base"
+                    min="100"
+                    max="10000"
+                  />
+                  <span className="text-sm sm:text-base text-gray-600 font-medium">sq. ft</span>
+                </div>
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                  Enter the carpet area of your {homeDetails.homeType} home
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Continue Button */}
         <div className="flex justify-center">
@@ -155,7 +180,7 @@ const HomeTypeStep: React.FC<HomeTypeStepProps> = ({ homeDetails, onUpdate, onNe
 
         {!isValid && (
           <p className="text-center text-red-500 text-xs mt-2 font-medium">
-            Please select quality tier, and home type
+            Please select quality tier, home type, and enter carpet area
           </p>
         )}
       </div>

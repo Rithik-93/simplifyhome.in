@@ -33,6 +33,14 @@ export interface FurnitureItem {
   totalPrice?: number; // Calculated price based on selected room size and quality tier
 }
 
+export interface SingleLineItem {
+  id: string;
+  name: string;
+  selected: boolean;
+  pricePerSqFt: number;
+  totalPrice?: number; // Calculated price based on carpet area
+}
+
 export interface RoomSizeSelection {
   [category: string]: number; // index of selected dimension for each category
 }
@@ -66,6 +74,7 @@ export interface AppState {
   currentStep: number;
   homeDetails: HomeDetails;
   furnitureItems: FurnitureItem[];
+  singleLineItems: SingleLineItem[];
   serviceItems: ServiceItem[];
   userDetails: UserDetails;
   estimate: EstimateItem[];
@@ -384,6 +393,27 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
       '10 × 12 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 8500, premium: 6500 } },
       '12 × 14 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 8500, premium: 6500 } }
     }
+  }
+];
+
+export const DEFAULT_SINGLE_LINE_ITEMS: SingleLineItem[] = [
+  {
+    id: 'false-ceiling',
+    name: 'False Ceiling',
+    selected: false,
+    pricePerSqFt: 900
+  },
+  {
+    id: 'ceiling-painting',
+    name: 'Ceiling Painting',
+    selected: false,
+    pricePerSqFt: 200
+  },
+  {
+    id: 'electrical-wiring',
+    name: 'Electrical & Wiring',
+    selected: false,
+    pricePerSqFt: 250
   }
 ];
 
