@@ -47,10 +47,10 @@ const HomeTypeStep: React.FC<HomeTypeStepProps> = ({ homeDetails, onUpdate, onNe
   const isValid = homeDetails.homeType && homeDetails.qualityTier && homeDetails.carpetArea > 0
 
     return (
-    <div className="w-full mx-auto px-4">
-      <div className="bg-white rounded-xl shadow-xl p-5 border-2 border-yellow-400 max-w-2xl mx-auto">
-        <div className="text-center mb-4">
-          <h2 className="text-xl font-semibold text-black mb-2">
+    <div className="w-full max-w-full mx-auto px-2 sm:px-4 overflow-x-hidden">
+      <div className="bg-white rounded-lg sm:rounded-xl shadow-lg sm:shadow-xl p-3 sm:p-5 border-2 border-yellow-400 max-w-2xl mx-auto w-full overflow-x-hidden">
+        <div className="text-center mb-3 sm:mb-4">
+          <h2 className="text-lg sm:text-xl font-semibold text-black mb-1 sm:mb-2">
             Select Your Home Type
           </h2>
           <p className="text-gray-700 text-sm">
@@ -59,36 +59,36 @@ const HomeTypeStep: React.FC<HomeTypeStepProps> = ({ homeDetails, onUpdate, onNe
         </div>
 
         {/* Quality Tier Section */}
-        <div className="mb-6">
-          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-            <h3 className="text-base font-semibold text-black mb-3 flex items-center">
-              <Crown className="w-5 h-5 mr-2 text-yellow-600" />
+        <div className="mb-4 sm:mb-6">
+          <div className="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
+            <h3 className="text-sm sm:text-base font-semibold text-black mb-2 sm:mb-3 flex items-center">
+              <Crown className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-yellow-600" />
               Quality Tier <span className="text-red-500 ml-1">*</span>
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-2 sm:space-y-4">
               {qualityTiers.map((tier) => {
                 const IconComponent = tier.icon
                 return (
-                  <div key={tier.value} className="px-2 py-1">
+                  <div key={tier.value} className="px-1 sm:px-2 py-1">
                     <button
                       onClick={() => handleQualityTierSelect(tier.value)}
-                      className={`w-full p-4 rounded-lg border-2 transition-all duration-300 flex items-center space-x-3 ${
+                      className={`w-full p-3 sm:p-4 rounded-lg border-2 transition-all duration-300 flex items-center space-x-2 sm:space-x-3 ${
                         homeDetails.qualityTier === tier.value
                           ? 'border-yellow-400 bg-yellow-50 text-black shadow-md transform scale-105'
                           : 'border-gray-300 hover:border-yellow-300 bg-white hover:shadow-sm'
                       }`}
                     >
                       <IconComponent 
-                        size={24} 
-                        className={`${
+                        size={20} 
+                        className={`sm:w-6 sm:h-6 ${
                           homeDetails.qualityTier === tier.value 
                             ? 'text-yellow-600' 
                             : 'text-gray-600'
                         }`}
                       />
-                      <div className="text-left">
-                        <div className="font-semibold text-base">{tier.label}</div>
-                        <div className="text-sm text-gray-600">{tier.description}</div>
+                      <div className="text-left flex-1">
+                        <div className="font-semibold text-sm sm:text-base">{tier.label}</div>
+                        <div className="text-xs sm:text-sm text-gray-600 leading-tight">{tier.description}</div>
                       </div>
                     </button>
                   </div>
@@ -99,36 +99,36 @@ const HomeTypeStep: React.FC<HomeTypeStepProps> = ({ homeDetails, onUpdate, onNe
         </div>
 
         {/* Configuration Section */}
-        <div className="mb-6">
-          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-            <h3 className="text-base font-semibold text-black mb-3 flex items-center">
-              <Building2 className="w-5 h-5 mr-2 text-yellow-600" />
+        <div className="mb-4 sm:mb-6">
+          <div className="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
+            <h3 className="text-sm sm:text-base font-semibold text-black mb-2 sm:mb-3 flex items-center">
+              <Building2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-yellow-600" />
               Configuration <span className="text-red-500 ml-1">*</span>
             </h3>
-            <div className="space-y-4">
+            <div className="space-y-2 sm:space-y-4">
               {homeTypes.map((type) => {
                 const IconComponent = type.icon
                 return (
-                  <div key={type.value} className="px-2 py-1">
+                  <div key={type.value} className="px-1 sm:px-2 py-1">
                     <button
                       onClick={() => handleHomeTypeSelect(type.value)}
-                      className={`w-full p-4 rounded-lg border-2 transition-all duration-300 flex items-center space-x-3 ${
+                      className={`w-full p-3 sm:p-4 rounded-lg border-2 transition-all duration-300 flex items-center space-x-2 sm:space-x-3 ${
                         homeDetails.homeType === type.value
                           ? 'border-yellow-400 bg-yellow-50 text-black shadow-md transform scale-105'
                           : 'border-gray-300 hover:border-yellow-300 bg-white hover:shadow-sm'
                       }`}
                     >
                       <IconComponent 
-                        size={24} 
-                        className={`${
+                        size={20} 
+                        className={`sm:w-6 sm:h-6 ${
                           homeDetails.homeType === type.value 
                             ? 'text-yellow-600' 
                             : 'text-gray-600'
                         }`}
                       />
-                      <div className="text-left">
-                        <div className="font-semibold text-base">{type.label}</div>
-                        <div className="text-sm text-gray-600">{type.defaultArea} sq. ft</div>
+                      <div className="text-left flex-1">
+                        <div className="font-semibold text-sm sm:text-base">{type.label}</div>
+                        <div className="text-xs sm:text-sm text-gray-600">{type.defaultArea} sq. ft</div>
                       </div>
                     </button>
                   </div>
@@ -143,7 +143,7 @@ const HomeTypeStep: React.FC<HomeTypeStepProps> = ({ homeDetails, onUpdate, onNe
           <button
             onClick={handleNext}
             disabled={!isValid}
-            className={`px-6 py-2 text-sm font-semibold rounded-lg transition-all duration-300 transform ${
+            className={`px-4 sm:px-6 py-2 sm:py-3 text-sm font-semibold rounded-lg transition-all duration-300 transform min-h-[44px] ${
               isValid
                 ? 'bg-black text-yellow-400 hover:bg-gray-800 hover:shadow-lg hover:-translate-y-1'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'

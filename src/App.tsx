@@ -90,11 +90,11 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
+    <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50 overflow-x-hidden">
       <Header />
-      <div className="w-full mx-auto px-4 py-6">
+      <div className="w-full max-w-full mx-auto px-2 sm:px-4 py-2 sm:py-4 overflow-x-hidden">
         <StepIndicator currentStep={appState.currentStep} />
-        <div className="mt-4">
+        <div className="mt-2 sm:mt-4 w-full max-w-full overflow-x-hidden">
           {renderCurrentStep()}
         </div>
       </div>
