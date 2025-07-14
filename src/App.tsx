@@ -12,7 +12,7 @@ import Header from './components/Header'
 function App() {
   const [appState, setAppState] = useState<AppState>({
     currentStep: 1,
-    homeDetails: { homeType: '', carpetArea: 0 },
+    homeDetails: { homeType: '', qualityTier: '', carpetArea: 0 },
     furnitureItems: DEFAULT_FURNITURE_ITEMS,
     serviceItems: DEFAULT_SERVICE_ITEMS,
     userDetails: { name: '', mobile: '', email: '', city: '' },
@@ -50,6 +50,7 @@ function App() {
         return (
           <FurnitureStep
             furnitureItems={appState.furnitureItems}
+            homeDetails={appState.homeDetails}
             onUpdate={(furnitureItems: FurnitureItem[]) => updateAppState({ furnitureItems })}
             onNext={nextStep}
             onPrev={prevStep}
@@ -59,6 +60,7 @@ function App() {
         return (
           <ServicesStep
             serviceItems={appState.serviceItems}
+            homeDetails={appState.homeDetails}
             carpetArea={appState.homeDetails.carpetArea}
             onUpdate={(serviceItems: ServiceItem[]) => updateAppState({ serviceItems })}
             onNext={nextStep}

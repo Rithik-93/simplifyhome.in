@@ -21,7 +21,7 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => {
             <div key={step.id} className="flex items-center flex-1">
               <div className="flex flex-col items-center w-full">
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-base border-2 transition-all duration-300 ${
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-base border-2 transition-all duration-300 ${
                     currentStep >= step.id
                       ? 'bg-yellow-400 text-black border-yellow-400 shadow-lg'
                       : 'bg-gray-100 text-gray-400 border-gray-300'
@@ -30,14 +30,14 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => {
                   {currentStep > step.id ? <Check size={16} /> : step.id}
                 </div>
                 <div className="text-center mt-2">
-                  <p className={`text-xs font-bold ${
+                  <p className={`text-xs font-semibold ${
                     currentStep >= step.id ? 'text-black' : 'text-gray-400'
                   }`}>
                     {step.title}
                   </p>
-                  <p className="text-xs text-gray-600 mt-1 hidden sm:block">
+                  {/* <p className="text-xs text-gray-600 mt-1 hidden sm:block">
                     {step.description}
-                  </p>
+                  </p> */}
                 </div>
               </div>
               {index < steps.length - 1 && (

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Home, Building, Building2, Castle } from 'lucide-react'
+import { Home, Building, Building2, Crown, Gem } from 'lucide-react'
 import type { HomeDetails } from '../../types'
 
 interface HomeTypeStepProps {
@@ -10,102 +10,131 @@ interface HomeTypeStepProps {
 
 const HomeTypeStep: React.FC<HomeTypeStepProps> = ({ homeDetails, onUpdate, onNext }) => {
   const [carpetAreaInput, setCarpetAreaInput] = useState(homeDetails.carpetArea.toString())
+  const [isManualArea, setIsManualArea] = useState(false)
 
-  const homeTypes = [
-    { value: '1BHK', label: '1 BHK', icon: Home },
-    { value: '2BHK', label: '2 BHK', icon: Building },
-    { value: '3BHK', label: '3 BHK', icon: Building2 },
-    { value: '4BHK', label: '4 BHK', icon: Castle },
+  const qualityTiers = [
+    { value: 'Premium', label: 'Premium', icon: Crown, description: 'High-quality materials and finishes' },
+    { value: 'Luxury', label: 'Luxury', icon: Gem, description: 'Ultra-premium materials' },
   ] as const
 
-  const handleHomeTypeSelect = (homeType: HomeDetails['homeType']) => {
-    onUpdate({ ...homeDetails, homeType })
+  const homeTypes = [
+    { value: '2BHK', label: '2 BHK', icon: Building, defaultArea: 2500 },
+    { value: '3BHK', label: '3 BHK', icon: Building2, defaultArea: 2300 },
+  ] as const
+
+  const handleQualityTierSelect = (qualityTier: HomeDetails['qualityTier']) => {
+    onUpdate({ ...homeDetails, qualityTier })
   }
 
-  const handleCarpetAreaChange = (value: string) => {
-    setCarpetAreaInput(value)
-    const numValue = parseFloat(value) || 0
-    onUpdate({ ...homeDetails, carpetArea: numValue })
+  const handleHomeTypeSelect = (homeType: HomeDetails['homeType']) => {
+    const selectedType = homeTypes.find(type => type.value === homeType)
+    const defaultArea = selectedType?.defaultArea || 0
+    
+    if (!isManualArea) {
+      setCarpetAreaInput(defaultArea.toString())
+      onUpdate({ ...homeDetails, homeType, carpetArea: defaultArea })
+    } else {
+      onUpdate({ ...homeDetails, homeType })
+    }
   }
 
   const handleNext = () => {
-    if (homeDetails.homeType && homeDetails.carpetArea > 0) {
+    if (homeDetails.homeType && homeDetails.qualityTier && homeDetails.carpetArea > 0) {
       onNext()
     }
   }
 
-  const isValid = homeDetails.homeType && homeDetails.carpetArea > 0
+  const isValid = homeDetails.homeType && homeDetails.qualityTier && homeDetails.carpetArea > 0
 
-  return (
+    return (
     <div className="w-full mx-auto px-4">
-      <div className="bg-white rounded-xl shadow-xl p-7 border-2 border-yellow-400 max-w-3xl mx-auto">
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-black mb-3">
+      <div className="bg-white rounded-xl shadow-xl p-5 border-2 border-yellow-400 max-w-2xl mx-auto">
+        <div className="text-center mb-4">
+          <h2 className="text-xl font-semibold text-black mb-2">
             Select Your Home Type
           </h2>
-          <p className="text-gray-700 text-base">
-            Choose your home configuration and provide the carpet area
+          <p className="text-gray-700 text-sm">
+            Choose quality tier, configuration, and area
           </p>
         </div>
 
-        {/* Home Type Selection */}
+        {/* Quality Tier Section */}
         <div className="mb-6">
-          <h3 className="text-lg font-bold text-black mb-4">
-            Home Configuration
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {homeTypes.map((type) => {
-              const IconComponent = type.icon
-              return (
-                <button
-                  key={type.value}
-                  onClick={() => handleHomeTypeSelect(type.value)}
-                  className={`p-4 rounded-xl border-2 transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1 ${
-                    homeDetails.homeType === type.value
-                      ? 'border-yellow-400 bg-yellow-50 text-black shadow-lg'
-                      : 'border-gray-300 hover:border-yellow-300 bg-white'
-                  }`}
-                >
-                  <div className="mb-2 flex justify-center">
-                    <IconComponent 
-                      size={32} 
-                      className={`${
-                        homeDetails.homeType === type.value 
-                          ? 'text-yellow-600' 
-                          : 'text-gray-600'
+          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <h3 className="text-base font-semibold text-black mb-3 flex items-center">
+              <Crown className="w-5 h-5 mr-2 text-yellow-600" />
+              Quality Tier <span className="text-red-500 ml-1">*</span>
+            </h3>
+            <div className="space-y-4">
+              {qualityTiers.map((tier) => {
+                const IconComponent = tier.icon
+                return (
+                  <div key={tier.value} className="px-2 py-1">
+                    <button
+                      onClick={() => handleQualityTierSelect(tier.value)}
+                      className={`w-full p-4 rounded-lg border-2 transition-all duration-300 flex items-center space-x-3 ${
+                        homeDetails.qualityTier === tier.value
+                          ? 'border-yellow-400 bg-yellow-50 text-black shadow-md transform scale-105'
+                          : 'border-gray-300 hover:border-yellow-300 bg-white hover:shadow-sm'
                       }`}
-                    />
+                    >
+                      <IconComponent 
+                        size={24} 
+                        className={`${
+                          homeDetails.qualityTier === tier.value 
+                            ? 'text-yellow-600' 
+                            : 'text-gray-600'
+                        }`}
+                      />
+                      <div className="text-left">
+                        <div className="font-semibold text-base">{tier.label}</div>
+                        <div className="text-sm text-gray-600">{tier.description}</div>
+                      </div>
+                    </button>
                   </div>
-                  <div className="font-bold text-base">{type.label}</div>
-                </button>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
         </div>
 
-        {/* Carpet Area Input */}
+        {/* Configuration Section */}
         <div className="mb-6">
-          <h3 className="text-lg font-bold text-black mb-4">
-            Carpet Area <span className="text-red-500">*</span>
-          </h3>
-          <div className="max-w-sm mx-auto">
-            <div className="relative">
-              <input
-                type="number"
-                value={carpetAreaInput}
-                onChange={(e) => handleCarpetAreaChange(e.target.value)}
-                placeholder="Enter carpet area"
-                className={`w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4 focus:ring-yellow-200 pr-16 text-base font-medium transition-all duration-200 ${
-                  carpetAreaInput ? 'border-yellow-400 focus:border-yellow-400' : 'border-gray-300 focus:border-yellow-400'
-                }`}
-              />
-              <div className="absolute right-3 top-3 text-gray-600 font-bold text-sm">
-                Sq. ft
-              </div>
+          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <h3 className="text-base font-semibold text-black mb-3 flex items-center">
+              <Building2 className="w-5 h-5 mr-2 text-yellow-600" />
+              Configuration <span className="text-red-500 ml-1">*</span>
+            </h3>
+            <div className="space-y-4">
+              {homeTypes.map((type) => {
+                const IconComponent = type.icon
+                return (
+                  <div key={type.value} className="px-2 py-1">
+                    <button
+                      onClick={() => handleHomeTypeSelect(type.value)}
+                      className={`w-full p-4 rounded-lg border-2 transition-all duration-300 flex items-center space-x-3 ${
+                        homeDetails.homeType === type.value
+                          ? 'border-yellow-400 bg-yellow-50 text-black shadow-md transform scale-105'
+                          : 'border-gray-300 hover:border-yellow-300 bg-white hover:shadow-sm'
+                      }`}
+                    >
+                      <IconComponent 
+                        size={24} 
+                        className={`${
+                          homeDetails.homeType === type.value 
+                            ? 'text-yellow-600' 
+                            : 'text-gray-600'
+                        }`}
+                      />
+                      <div className="text-left">
+                        <div className="font-semibold text-base">{type.label}</div>
+                        <div className="text-sm text-gray-600">{type.defaultArea} sq. ft</div>
+                      </div>
+                    </button>
+                  </div>
+                )
+              })}
             </div>
-            <p className="text-xs text-gray-600 mt-2 text-center">
-              Enter the total carpet area of your home in square feet
-            </p>
           </div>
         </div>
 
@@ -114,9 +143,9 @@ const HomeTypeStep: React.FC<HomeTypeStepProps> = ({ homeDetails, onUpdate, onNe
           <button
             onClick={handleNext}
             disabled={!isValid}
-            className={`px-8 py-3 text-base font-bold rounded-xl transition-all duration-300 transform ${
+            className={`px-6 py-2 text-sm font-semibold rounded-lg transition-all duration-300 transform ${
               isValid
-                ? 'bg-black text-yellow-400 hover:bg-gray-800 hover:shadow-xl hover:-translate-y-1'
+                ? 'bg-black text-yellow-400 hover:bg-gray-800 hover:shadow-lg hover:-translate-y-1'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >
@@ -125,8 +154,8 @@ const HomeTypeStep: React.FC<HomeTypeStepProps> = ({ homeDetails, onUpdate, onNe
         </div>
 
         {!isValid && (
-          <p className="text-center text-red-500 text-sm mt-3 font-medium">
-            Please select a home type and enter the carpet area to continue
+          <p className="text-center text-red-500 text-xs mt-2 font-medium">
+            Please select quality tier, and home type
           </p>
         )}
       </div>

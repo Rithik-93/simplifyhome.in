@@ -31,7 +31,8 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
         if (!acc[item.category]) {
           acc[item.category] = []
         }
-        const price = item.length * item.width * item.pricePerSqFt
+        // Use the totalPrice that was calculated in FurnitureStep
+        const price = item.totalPrice || 0
         acc[item.category].push({ name: item.name, price })
         return acc
       }, {} as { [key: string]: { name: string; price: number }[] })
@@ -128,10 +129,14 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
 
         {/* Home Details */}
         <div className="p-4 bg-gray-50 border-b-2 border-gray-200">
-          <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="grid grid-cols-3 gap-3 text-sm">
             <div>
               <div className="font-bold text-black">Home Type</div>
               <div className="text-black text-lg font-bold">{appState.homeDetails.homeType}</div>
+            </div>
+            <div>
+              <div className="font-bold text-black">Quality Tier</div>
+              <div className="text-black text-lg font-bold">{appState.homeDetails.qualityTier}</div>
             </div>
             <div>
               <div className="font-bold text-black">Carpet Area</div>
@@ -236,14 +241,14 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
             >
               ← Edit Details
             </button>
-            <button
+            {/* <button
               onClick={downloadEstimate}
               className="px-6 py-3 text-base font-bold rounded-xl bg-yellow-400 text-black hover:bg-yellow-500 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center gap-2"
               style={{ backgroundColor: '#FFBD01', color: '#000000' }}
             >
               <Download size={16} />
               Download Estimate
-            </button>
+            </button> */}
             <button
               onClick={onRestart}
               className="px-6 py-3 text-base font-bold rounded-xl bg-black text-yellow-400 hover:bg-gray-800 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center gap-2"

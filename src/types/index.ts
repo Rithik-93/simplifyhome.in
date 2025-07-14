@@ -1,16 +1,40 @@
 export interface HomeDetails {
-  homeType: '1BHK' | '2BHK' | '3BHK' | '4BHK' | '';
+  homeType: '2BHK' | '3BHK' | '';
+  qualityTier: 'Premium' | 'Luxury' | '';
   carpetArea: number;
+}
+
+export interface DimensionOption {
+  length: number;
+  width: number;
+  label: string;
+}
+
+export interface ItemPricing {
+  area: {
+    luxury: number;
+    premium: number;
+  };
+  price: {
+    luxury: number;
+    premium: number;
+  };
 }
 
 export interface FurnitureItem {
   id: string;
   name: string;
   selected: boolean;
-  length: number;
-  width: number;
-  pricePerSqFt: number;
+  quantity: number;
   category: string;
+  pricing: {
+    [roomSize: string]: ItemPricing;
+  };
+  totalPrice?: number; // Calculated price based on selected room size and quality tier
+}
+
+export interface RoomSizeSelection {
+  [category: string]: number; // index of selected dimension for each category
 }
 
 export interface ServiceItem {
@@ -48,39 +72,331 @@ export interface AppState {
   finalPrice: number;
 }
 
+// Define dimension options for each category
+const BEDROOM_DIMENSIONS: DimensionOption[] = [
+  { length: 10, width: 12, label: '10 × 12 ft' },
+  { length: 14, width: 16, label: '14 × 16 ft' },
+  { length: 11, width: 11, label: '11 × 11 ft' },
+  { length: 10, width: 10, label: '10 × 10 ft' }
+];
+
+const LIVING_ROOM_DIMENSIONS: DimensionOption[] = [
+  { length: 7, width: 10, label: '7 × 10 ft' },
+  { length: 10, width: 13, label: '10 × 13 ft' },
+  { length: 12, width: 18, label: '12 × 18 ft' },
+  { length: 15, width: 20, label: '15 × 20 ft' }
+];
+
+const POOJA_ROOM_DIMENSIONS: DimensionOption[] = [
+  { length: 9, width: 9, label: '9 × 9 ft' },
+  { length: 3, width: 3, label: '3 × 3 ft' }
+];
+
+const KITCHEN_DIMENSIONS: DimensionOption[] = [
+  { length: 8, width: 10, label: '8 × 10 ft' },
+  { length: 10, width: 12, label: '10 × 12 ft' },
+  { length: 12, width: 14, label: '12 × 14 ft' }
+];
+
+// Room dimension options for each category
+const GUEST_BEDROOM_DIMENSIONS: DimensionOption[] = [
+  { length: 10, width: 10, label: '10 × 10 ft' },
+  { length: 10, width: 12, label: '10 × 12 ft' },
+  { length: 11, width: 11, label: '11 × 11 ft' }
+];
+
+export const ROOM_DIMENSIONS = {
+  'Master Bedroom': BEDROOM_DIMENSIONS,
+  'Children Bedroom': BEDROOM_DIMENSIONS, 
+  'Guest Bedroom': GUEST_BEDROOM_DIMENSIONS,
+  'Living Room': LIVING_ROOM_DIMENSIONS,
+  'Pooja Room': POOJA_ROOM_DIMENSIONS,
+  'Modular Kitchen': KITCHEN_DIMENSIONS
+};
+
 export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
-  // Foyer & Outside Area
-  { id: 'shoe-rack', name: 'Shoe Rack', selected: false, length: 6, width: 2, pricePerSqFt: 1200, category: 'Foyer & Outside Area' },
-  { id: 'safety-door', name: 'Safety Door', selected: false, length: 7, width: 3, pricePerSqFt: 800, category: 'Foyer & Outside Area' },
-  { id: 'name-plate', name: 'Name Plate Area Panelling', selected: false, length: 3, width: 2, pricePerSqFt: 900, category: 'Foyer & Outside Area' },
-  
+  // Master Bedroom
+  {
+    id: 'master-wardrobe',
+    name: 'Wardrobe',
+    selected: false,
+    quantity: 1,
+    category: 'Master Bedroom',
+    pricing: {
+      '10 × 10 ft': { area: { luxury: 30, premium: 20 }, price: { luxury: 4800, premium: 2850 } },
+      '10 × 12 ft': { area: { luxury: 40, premium: 25 }, price: { luxury: 5000, premium: 3000 } },
+      '14 × 16 ft': { area: { luxury: 60, premium: 35 }, price: { luxury: 6000, premium: 2800 } },
+      '11 × 11 ft': { area: { luxury: 35, premium: 15 }, price: { luxury: 2500, premium: 2500 } }
+    }
+  },
+  {
+    id: 'master-study-table',
+    name: 'Study Table',
+    selected: false,
+    quantity: 1,
+    category: 'Master Bedroom',
+    pricing: {
+      '10 × 10 ft': { area: { luxury: 12, premium: 12 }, price: { luxury: 2800, premium: 2050 } },
+      '10 × 12 ft': { area: { luxury: 14, premium: 14 }, price: { luxury: 3800, premium: 2580 } },
+      '14 × 16 ft': { area: { luxury: 16, premium: 16 }, price: { luxury: 4500, premium: 3200 } },
+      '11 × 11 ft': { area: { luxury: 10, premium: 10 }, price: { luxury: 2650, premium: 1950 } }
+    }
+  },
+  {
+    id: 'master-tv-unit',
+    name: 'TV Unit',
+    selected: false,
+    quantity: 1,
+    category: 'Master Bedroom',
+    pricing: {
+      '10 × 10 ft': { area: { luxury: 8, premium: 8 }, price: { luxury: 1500, premium: 1250 } },
+      '10 × 12 ft': { area: { luxury: 10, premium: 10 }, price: { luxury: 1600, premium: 1300 } },
+      '14 × 16 ft': { area: { luxury: 12, premium: 12 }, price: { luxury: 3000, premium: 2000 } },
+      '11 × 11 ft': { area: { luxury: 10, premium: 10 }, price: { luxury: 2000, premium: 1800 } }
+    }
+  },
+  {
+    id: 'master-bed-unit',
+    name: 'Bed Unit with Back Panel',
+    selected: false,
+    quantity: 1,
+    category: 'Master Bedroom',
+    pricing: {
+      '10 × 10 ft': { area: { luxury: 30, premium: 24 }, price: { luxury: 3000, premium: 3000 } },
+      '10 × 12 ft': { area: { luxury: 30, premium: 30 }, price: { luxury: 3700, premium: 3700 } },
+      '14 × 16 ft': { area: { luxury: 36, premium: 36 }, price: { luxury: 4200, premium: 4200 } },
+      '11 × 11 ft': { area: { luxury: 27, premium: 27 }, price: { luxury: 3400, premium: 3400 } }
+    }
+  },
+
+  // Children Bedroom
+  {
+    id: 'children-wardrobe',
+    name: 'Wardrobe',
+    selected: false,
+    quantity: 1,
+    category: 'Children Bedroom',
+    pricing: {
+      '10 × 10 ft': { area: { luxury: 30, premium: 20 }, price: { luxury: 4800, premium: 2850 } },
+      '10 × 12 ft': { area: { luxury: 40, premium: 25 }, price: { luxury: 5000, premium: 3000 } },
+      '14 × 16 ft': { area: { luxury: 60, premium: 35 }, price: { luxury: 6000, premium: 2800 } },
+      '11 × 11 ft': { area: { luxury: 35, premium: 15 }, price: { luxury: 4300, premium: 2500 } }
+    }
+  },
+  {
+    id: 'children-study-table',
+    name: 'Study Table',
+    selected: false,
+    quantity: 1,
+    category: 'Children Bedroom',
+    pricing: {
+      '10 × 10 ft': { area: { luxury: 12, premium: 12 }, price: { luxury: 2800, premium: 2050 } },
+      '10 × 12 ft': { area: { luxury: 14, premium: 14 }, price: { luxury: 3800, premium: 2850 } },
+      '14 × 16 ft': { area: { luxury: 16, premium: 16 }, price: { luxury: 4500, premium: 3200 } },
+      '11 × 11 ft': { area: { luxury: 10, premium: 10 }, price: { luxury: 2650, premium: 1950 } }
+    }
+  },
+  {
+    id: 'children-bed-unit',
+    name: 'Bed Unit with Back Panel',
+    selected: false,
+    quantity: 1,
+    category: 'Children Bedroom',
+    pricing: {
+      '10 × 10 ft': { area: { luxury: 24, premium: 24 }, price: { luxury: 3000, premium: 3000 } },
+      '10 × 12 ft': { area: { luxury: 30, premium: 30 }, price: { luxury: 3700, premium: 3700 } },
+      '14 × 16 ft': { area: { luxury: 36, premium: 36 }, price: { luxury: 4200, premium: 4200 } },
+      '11 × 11 ft': { area: { luxury: 27, premium: 27 }, price: { luxury: 3400, premium: 3400 } }
+    }
+  },
+
+  // Guest Bedroom
+  {
+    id: 'guest-wardrobe',
+    name: 'Wardrobe',
+    selected: false,
+    quantity: 1,
+    category: 'Guest Bedroom',
+    pricing: {
+      '10 × 10 ft': { area: { luxury: 30, premium: 20 }, price: { luxury: 4800, premium: 2850 } },
+      '10 × 12 ft': { area: { luxury: 40, premium: 25 }, price: { luxury: 5000, premium: 3000 } },
+      '11 × 11 ft': { area: { luxury: 35, premium: 15 }, price: { luxury: 4300, premium: 2500 } }
+    }
+  },
+  {
+    id: 'guest-study-table',
+    name: 'Study Table',
+    selected: false,
+    quantity: 1,
+    category: 'Guest Bedroom',
+    pricing: {
+      '10 × 10 ft': { area: { luxury: 12, premium: 12 }, price: { luxury: 2800, premium: 2050 } },
+      '10 × 12 ft': { area: { luxury: 14, premium: 14 }, price: { luxury: 3800, premium: 2850 } },
+      '11 × 11 ft': { area: { luxury: 10, premium: 10 }, price: { luxury: 2650, premium: 1950 } }
+    }
+  },
+  {
+    id: 'guest-bed-unit',
+    name: 'Bed Unit with Back Panel',
+    selected: false,
+    quantity: 1,
+    category: 'Guest Bedroom',
+    pricing: {
+      '10 × 10 ft': { area: { luxury: 24, premium: 24 }, price: { luxury: 3000, premium: 3000 } },
+      '10 × 12 ft': { area: { luxury: 30, premium: 30 }, price: { luxury: 3700, premium: 3700 } },
+      '11 × 11 ft': { area: { luxury: 27, premium: 27 }, price: { luxury: 3400, premium: 3400 } }
+    }
+  },
+
   // Living Room
-  { id: 'tv-unit', name: 'Grand TV Unit', selected: false, length: 8, width: 6, pricePerSqFt: 1500, category: 'Living Room' },
-  { id: 'crockery-unit', name: 'Crockery Unit', selected: false, length: 6, width: 8, pricePerSqFt: 1400, category: 'Living Room' },
-  { id: 'bar-unit', name: 'Bar Unit', selected: false, length: 4, width: 2, pricePerSqFt: 1600, category: 'Living Room' },
-  { id: 'book-shelf', name: 'Book Shelf', selected: false, length: 6, width: 2, pricePerSqFt: 1100, category: 'Living Room' },
-  { id: 'wall-paper-living', name: 'Wall Paper', selected: false, length: 12, width: 10, pricePerSqFt: 200, category: 'Living Room' },
-  { id: 'temple-design', name: 'Temple Design', selected: false, length: 3, width: 2, pricePerSqFt: 2000, category: 'Living Room' },
-  { id: 'sofa-back-wall', name: 'Sofa Back Wall Panelling', selected: false, length: 8, width: 8, pricePerSqFt: 800, category: 'Living Room' },
-  { id: 'dining-wall', name: 'Dining Wall Panelling', selected: false, length: 6, width: 8, pricePerSqFt: 800, category: 'Living Room' },
-  { id: 'diamond-mirror', name: 'Diamond Mirror Wall', selected: false, length: 6, width: 8, pricePerSqFt: 1200, category: 'Living Room' },
-  
-  // Bedroom 01
-  { id: 'wardrobe', name: 'Wardrobe', selected: false, length: 8, width: 6, pricePerSqFt: 1800, category: 'Bedroom 01' },
-  { id: 'loft', name: 'Loft', selected: false, length: 8, width: 2, pricePerSqFt: 1200, category: 'Bedroom 01' },
-  { id: 'dressing', name: 'Dressing', selected: false, length: 4, width: 2, pricePerSqFt: 1500, category: 'Bedroom 01' },
-  { id: 'bed', name: 'Bed', selected: false, length: 6, width: 6, pricePerSqFt: 1000, category: 'Bedroom 01' },
-  { id: 'bed-back-rest', name: 'Bed Back Rest with Fabric', selected: false, length: 6, width: 1, pricePerSqFt: 1500, category: 'Bedroom 01' },
-  { id: 'side-table', name: 'Side Table', selected: false, length: 2, width: 1, pricePerSqFt: 1200, category: 'Bedroom 01' },
-  { id: 'working-table', name: 'Working Table', selected: false, length: 4, width: 2, pricePerSqFt: 1300, category: 'Bedroom 01' },
-  { id: 'mini-tv-unit', name: 'Mini TV Unit', selected: false, length: 4, width: 2, pricePerSqFt: 1100, category: 'Bedroom 01' },
-  { id: 'wall-paper-bedroom', name: 'Wall Paper', selected: false, length: 10, width: 8, pricePerSqFt: 200, category: 'Bedroom 01' },
-  { id: 'bed-back-wall-laminate', name: 'Bed Back Wall Laminate Panelling', selected: false, length: 6, width: 8, pricePerSqFt: 900, category: 'Bedroom 01' },
+  {
+    id: 'living-tv-drawer',
+    name: 'TV Drawer unit',
+    selected: false,
+    quantity: 1,
+    category: 'Living Room',
+    pricing: {
+      '7 × 10 ft': { area: { luxury: 60, premium: 15 }, price: { luxury: 21500, premium: 18500 } },
+      '10 × 13 ft': { area: { luxury: 60, premium: 15 }, price: { luxury: 24500, premium: 21500 } },
+      '12 × 18 ft': { area: { luxury: 60, premium: 15 }, price: { luxury: 29500, premium: 24500 } },
+      '15 × 20 ft': { area: { luxury: 60, premium: 15 }, price: { luxury: 32500, premium: 29500 } }
+    }
+  },
+  {
+    id: 'living-tv-paneling',
+    name: 'TV unit paneling',
+    selected: false,
+    quantity: 1,
+    category: 'Living Room',
+    pricing: {
+      '7 × 10 ft': { area: { luxury: 60, premium: 40 }, price: { luxury: 1150, premium: 750 } },
+      '10 × 13 ft': { area: { luxury: 80, premium: 60 }, price: { luxury: 1350, premium: 850 } },
+      '12 × 18 ft': { area: { luxury: 95, premium: 75 }, price: { luxury: 1750, premium: 950 } },
+      '15 × 20 ft': { area: { luxury: 110, premium: 80 }, price: { luxury: 2550, premium: 1250 } }
+    }
+  },
+
+  // Pooja Room
+  {
+    id: 'pooja-unit',
+    name: 'Pooja Unit',
+    selected: false,
+    quantity: 1,
+    category: 'Pooja Room',
+    pricing: {
+      '3 × 3 ft': { area: { luxury: 2, premium: 2 }, price: { luxury: 7500, premium: 4000 } },
+      '9 × 9 ft': { area: { luxury: 6, premium: 6 }, price: { luxury: 5000, premium: 4000 } }
+    }
+  },
+  {
+    id: 'pooja-doors',
+    name: 'Doors',
+    selected: false,
+    quantity: 1,
+    category: 'Pooja Room',
+    pricing: {
+      '3 × 3 ft': { area: { luxury: 110, premium: 80 }, price: { luxury: 16000, premium: 13000 } },
+      '9 × 9 ft': { area: { luxury: 110, premium: 80 }, price: { luxury: 13000, premium: 10000 } }
+    }
+  },
+
+  // Modular Kitchen
+  {
+    id: 'kitchen-base-unit-parallel',
+    name: 'Base Unit - Parallel',
+    selected: false,
+    quantity: 1,
+    category: 'Modular Kitchen',
+    pricing: {
+      '8 × 10 ft': { area: { luxury: 100, premium: 100 }, price: { luxury: 2850, premium: 2050 } },
+      '10 × 12 ft': { area: { luxury: 120, premium: 120 }, price: { luxury: 2850, premium: 2050 } },
+      '12 × 14 ft': { area: { luxury: 130, premium: 130 }, price: { luxury: 2850, premium: 2050 } }
+    }
+  },
+  {
+    id: 'kitchen-base-unit-l-shaped',
+    name: 'Base Unit - L-Shaped',
+    selected: false,
+    quantity: 1,
+    category: 'Modular Kitchen',
+    pricing: {
+      '8 × 10 ft': { area: { luxury: 120, premium: 120 }, price: { luxury: 2850, premium: 2050 } },
+      '10 × 12 ft': { area: { luxury: 130, premium: 130 }, price: { luxury: 2850, premium: 2050 } },
+      '12 × 14 ft': { area: { luxury: 148, premium: 148 }, price: { luxury: 2850, premium: 2050 } }
+    }
+  },
+  {
+    id: 'kitchen-base-unit-island',
+    name: 'Base Unit - Island',
+    selected: false,
+    quantity: 1,
+    category: 'Modular Kitchen',
+    pricing: {
+      '8 × 10 ft': { area: { luxury: 90, premium: 90 }, price: { luxury: 2850, premium: 2050 } },
+      '10 × 12 ft': { area: { luxury: 100, premium: 100 }, price: { luxury: 2850, premium: 2050 } },
+      '12 × 14 ft': { area: { luxury: 110, premium: 110 }, price: { luxury: 2850, premium: 2050 } }
+    }
+  },
+  {
+    id: 'kitchen-tandem-baskets',
+    name: 'Tandem Baskets',
+    selected: false,
+    quantity: 1,
+    category: 'Modular Kitchen',
+    pricing: {
+      '8 × 10 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 6000, premium: 5000 } },
+      '10 × 12 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 6000, premium: 5000 } },
+      '12 × 14 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 6000, premium: 5000 } }
+    }
+  },
+  {
+    id: 'kitchen-bottle-pullout',
+    name: 'Bottle Pullout',
+    selected: false,
+    quantity: 1,
+    category: 'Modular Kitchen',
+    pricing: {
+      '8 × 10 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 12000, premium: 7500 } },
+      '10 × 12 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 12000, premium: 7500 } },
+      '12 × 14 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 12000, premium: 7500 } }
+    }
+  },
+  {
+    id: 'kitchen-corner-unit',
+    name: 'Corner Unit',
+    selected: false,
+    quantity: 1,
+    category: 'Modular Kitchen',
+    pricing: {
+      '8 × 10 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 27500, premium: 20500 } },
+      '10 × 12 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 27500, premium: 20500 } },
+      '12 × 14 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 27500, premium: 20500 } }
+    }
+  },
+  {
+    id: 'kitchen-wicker-basket',
+    name: 'Wicker Basket',
+    selected: false,
+    quantity: 1,
+    category: 'Modular Kitchen',
+    pricing: {
+      '8 × 10 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 8500, premium: 6500 } },
+      '10 × 12 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 8500, premium: 6500 } },
+      '12 × 14 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 8500, premium: 6500 } }
+    }
+  }
 ];
 
 export const DEFAULT_SERVICE_ITEMS: ServiceItem[] = [
-  { id: 'electrical', name: 'Electrical', selected: false, basePrice: 0, pricePerSqFt: 80, description: 'Complete electrical work with Polycab wires' },
-  { id: 'false-ceiling', name: 'False Ceiling', selected: false, basePrice: 0, pricePerSqFt: 150, description: 'Gypsum false ceiling with LED lights' },
-  { id: 'sofa-dining', name: 'Sofa 5 Seater with Dining 4 Seater', selected: false, basePrice: 85000, pricePerSqFt: 0, description: 'Premium sofa set with dining table' },
-  { id: 'full-house-painting', name: 'Full House Painting', selected: false, basePrice: 0, pricePerSqFt: 45, description: 'Asian Royal Paint - Royal Shine' },
+  // Additional Add-ins - Premium Tier
+  { id: 'sofa-premium', name: 'Sofa (Premium)', selected: false, basePrice: 110000, pricePerSqFt: 0, description: 'Premium quality sofa for 3BHK' },
+  { id: 'dining-table-premium', name: 'Dining Table (Premium)', selected: false, basePrice: 95000, pricePerSqFt: 0, description: 'Premium dining table for 3BHK' },
+  { id: 'carpets-premium', name: 'Carpets (Premium)', selected: false, basePrice: 15000, pricePerSqFt: 0, description: 'Premium carpets for 3BHK' },
+  { id: 'designer-lights-premium', name: 'Designer Lights (Premium)', selected: false, basePrice: 15000, pricePerSqFt: 0, description: 'Premium designer lights for 3BHK' },
+  
+  // Additional Add-ins - Luxury Tier
+  { id: 'sofa-luxury', name: 'Sofa (Luxury)', selected: false, basePrice: 150000, pricePerSqFt: 0, description: 'Luxury quality sofa for 3BHK' },
+  { id: 'dining-table-luxury', name: 'Dining Table (Luxury)', selected: false, basePrice: 125000, pricePerSqFt: 0, description: 'Luxury dining table for 3BHK' },
+  { id: 'carpets-luxury', name: 'Carpets (Luxury)', selected: false, basePrice: 35000, pricePerSqFt: 0, description: 'Luxury carpets for 3BHK' },
+  { id: 'designer-lights-luxury', name: 'Designer Lights (Luxury)', selected: false, basePrice: 22000, pricePerSqFt: 0, description: 'Luxury designer lights for 3BHK' },
 ]; 

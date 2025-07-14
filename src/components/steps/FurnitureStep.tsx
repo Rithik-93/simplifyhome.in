@@ -1,8 +1,11 @@
 
-import type { FurnitureItem } from '../../types'
+import { useState, useEffect } from 'react'
+import type { FurnitureItem, RoomSizeSelection, HomeDetails } from '../../types'
+import { ROOM_DIMENSIONS } from '../../types'
 
 interface FurnitureStepProps {
   furnitureItems: FurnitureItem[]
+  homeDetails: HomeDetails
   onUpdate: (furnitureItems: FurnitureItem[]) => void
   onNext: () => void
   onPrev: () => void
@@ -10,28 +13,113 @@ interface FurnitureStepProps {
 
 const FurnitureStep: React.FC<FurnitureStepProps> = ({ 
   furnitureItems, 
+  homeDetails,
   onUpdate, 
   onNext, 
   onPrev 
 }) => {
+  // State for room size selections for each category
+  const [roomSizes, setRoomSizes] = useState<RoomSizeSelection>({
+    'Master Bedroom': 0,
+    'Children Bedroom': 0,
+    'Guest Bedroom': 0,
+    'Living Room': 0,
+    'Pooja Room': 0,
+    'Modular Kitchen': 0
+  })
+
+  const calculateItemPrice = (item: FurnitureItem, dimensionIndex: number) => {
+    const roomDimensions = ROOM_DIMENSIONS[item.category as keyof typeof ROOM_DIMENSIONS]
+    const selectedDimension = roomDimensions[dimensionIndex]
+    const roomSizeKey = selectedDimension.label
+    const qualityTier = homeDetails.qualityTier.toLowerCase() as 'luxury' | 'premium'
+    
+    if (item.pricing[roomSizeKey]) {
+      return item.pricing[roomSizeKey].price[qualityTier]
+    }
+    return 0
+  }
+
+  // Calculate initial prices for all items when component mounts
+  useEffect(() => {
+    // Only update if items don't already have totalPrice calculated
+    const needsUpdate = furnitureItems.some(item => item.totalPrice === undefined)
+    if (needsUpdate) {
+      const updatedItems = furnitureItems.map(item => ({
+        ...item,
+        totalPrice: calculateItemPrice(item, roomSizes[item.category])
+      }))
+      onUpdate(updatedItems)
+    }
+  }, [homeDetails.qualityTier]) // Recalculate when quality tier changes
+
   const toggleFurnitureItem = (itemId: string) => {
+    // Capture current scroll position and target element
+    const scrollPosition = window.scrollY
+    const targetElement = document.getElementById(`item-${itemId}`)
+    const targetOffset = targetElement?.getBoundingClientRect().top || 0
+    
     const updatedItems = furnitureItems.map(item => 
       item.id === itemId ? { ...item, selected: !item.selected } : item
     )
     onUpdate(updatedItems)
+    
+    // Use requestAnimationFrame for better timing with DOM updates
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        // Calculate new scroll position to keep target element in same position
+        if (targetElement) {
+          const newTargetOffset = targetElement.getBoundingClientRect().top
+          const scrollDiff = newTargetOffset - targetOffset
+          window.scrollTo(0, scrollPosition + scrollDiff)
+        } else {
+          window.scrollTo(0, scrollPosition)
+        }
+      })
+    })
   }
 
-  const updateFurnitureDimensions = (itemId: string, field: 'length' | 'width', value: number) => {
+
+
+  const updateRoomSize = (category: string, dimensionIndex: number) => {
+    const newRoomSizes = { ...roomSizes, [category]: dimensionIndex }
+    setRoomSizes(newRoomSizes)
+    
+    // Update all items in this category with new pricing
     const updatedItems = furnitureItems.map(item => 
-      item.id === itemId ? { ...item, [field]: value } : item
+      item.category === category ? { 
+        ...item, 
+        totalPrice: calculateItemPrice(item, dimensionIndex)
+      } : item
     )
     onUpdate(updatedItems)
   }
 
+  const getItemArea = (item: FurnitureItem, category: string) => {
+    const roomDimensions = ROOM_DIMENSIONS[category as keyof typeof ROOM_DIMENSIONS]
+    const selectedDimension = roomDimensions[roomSizes[category]]
+    const roomSizeKey = selectedDimension.label
+    const qualityTier = homeDetails.qualityTier.toLowerCase() as 'luxury' | 'premium'
+    
+    if (item.pricing[roomSizeKey]) {
+      return item.pricing[roomSizeKey].area[qualityTier]
+    }
+    return 0
+  }
+
+  const getRoomArea = (category: string) => {
+    const roomDimensions = ROOM_DIMENSIONS[category as keyof typeof ROOM_DIMENSIONS]
+    const selectedDimension = roomDimensions[roomSizes[category]]
+    return selectedDimension.length * selectedDimension.width
+  }
+
   const categories = [
-    'Foyer & Outside Area',
+    'Master Bedroom',
+    'Children Bedroom',
+    'Guest Bedroom',
     'Living Room',
-    'Bedroom 01'
+    'Pooja Room',
+    'Modular Kitchen'
   ]
 
   const getItemsByCategory = (category: string) => {
@@ -67,63 +155,52 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
             <span className="text-sm font-medium text-gray-900 leading-tight">
               {item.name}
             </span>
-            <div className="text-xs text-yellow-600 font-medium mt-1">
-              ₹{item.pricePerSqFt}/sq.ft
+            <div className="text-xs text-gray-600 mt-1">
+              Area: {getItemArea(item, item.category)} sq.ft ({homeDetails.qualityTier})
+            </div>
+            <div className="text-xs text-yellow-600 font-medium">
+              ₹{calculateItemPrice(item, roomSizes[item.category]).toLocaleString()}
             </div>
           </div>
         </label>
       </div>
       
-      {item.selected && (
-        <div className="space-y-2 animate-fadeIn border-t border-yellow-200 pt-2 mt-2">
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Length (ft)
-              </label>
-              <input
-                type="number"
-                value={item.length}
-                onChange={(e) => updateFurnitureDimensions(item.id, 'length', parseFloat(e.target.value) || 0)}
-                className="w-full px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 text-sm"
-                min="0"
-                step="0.1"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Width (ft)
-              </label>
-              <input
-                type="number"
-                value={item.width}
-                onChange={(e) => updateFurnitureDimensions(item.id, 'width', parseFloat(e.target.value) || 0)}
-                className="w-full px-2 py-1.5 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 text-sm"
-                min="0"
-                step="0.1"
-              />
-            </div>
-          </div>
-          <div className="bg-gray-900 rounded p-2">
-            <div className="text-xs text-yellow-400">
-              Area: {(item.length * item.width).toFixed(1)} sq.ft
-            </div>
-            <div className="text-sm text-yellow-400 font-medium">
-              Price: ₹{Math.round(item.length * item.width * item.pricePerSqFt).toLocaleString()}
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   )
 
   const CategoryColumn = ({ category }: { category: string }) => {
     const categoryItems = getItemsByCategory(category)
+    const roomDimensions = ROOM_DIMENSIONS[category as keyof typeof ROOM_DIMENSIONS]
+    const selectedDimension = roomDimensions[roomSizes[category]]
+    
     return (
       <div className="bg-gray-50 rounded-lg p-4 h-fit">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
+        <h3 className="text-lg font-semibold text-gray-900 mb-3 text-center">
           {category}
         </h3>
+        
+        {/* Room Size Selector */}
+        <div className="mb-4 p-3 bg-white rounded-lg border border-yellow-300">
+          <label className="block text-sm font-semibold text-gray-900 mb-2">
+            Room Size
+          </label>
+          <select
+            value={roomSizes[category]}
+            onChange={(e) => updateRoomSize(category, parseInt(e.target.value))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 text-sm"
+          >
+            {roomDimensions.map((option, index) => (
+              <option key={index} value={index}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <div className="text-xs text-gray-600 mt-1">
+            Area: {(selectedDimension.length * selectedDimension.width).toFixed(0)} sq.ft
+          </div>
+        </div>
+        
         <div className="space-y-3">
           {categoryItems.map((item) => (
             <FurnitureItemCard key={item.id} item={item} />
@@ -145,8 +222,8 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
           </p>
         </div>
 
-        {/* Three Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* Category Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-6">
           {categories.map((category) => (
             <CategoryColumn key={category} category={category} />
           ))}
@@ -159,17 +236,21 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
               Selected Items Summary
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              {furnitureItems.filter(item => item.selected).map((item) => (
-                <div key={item.id} className="bg-white rounded p-3 border border-yellow-400 shadow-sm">
-                  <div className="text-sm font-medium text-gray-900">{item.name}</div>
-                  <div className="text-xs text-gray-600">
-                    {item.length} × {item.width} ft = {(item.length * item.width).toFixed(1)} sq.ft
+              {furnitureItems.filter(item => item.selected).map((item) => {
+                const itemArea = getItemArea(item, item.category)
+                const totalPrice = calculateItemPrice(item, roomSizes[item.category])
+                return (
+                  <div key={item.id} className="bg-white rounded p-3 border border-yellow-400 shadow-sm">
+                    <div className="text-sm font-medium text-gray-900">{item.name}</div>
+                    <div className="text-xs text-gray-600">
+                      Area: {itemArea} sq.ft ({homeDetails.qualityTier})
+                    </div>
+                    <div className="text-sm font-medium text-gray-900 mt-1">
+                      ₹{Math.round(totalPrice).toLocaleString()}
+                    </div>
                   </div>
-                  <div className="text-sm font-medium text-gray-900 mt-1">
-                    ₹{Math.round(item.length * item.width * item.pricePerSqFt).toLocaleString()}
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}

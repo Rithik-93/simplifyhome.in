@@ -1,8 +1,9 @@
-import { Zap, Home, Sofa, Paintbrush2, Settings } from 'lucide-react'
-import type { ServiceItem } from '../../types'
+import { Zap, Home, Sofa, Paintbrush2, Settings, UtensilsCrossed, Lightbulb } from 'lucide-react'
+import type { ServiceItem, HomeDetails } from '../../types'
 
 interface ServicesStepProps {
   serviceItems: ServiceItem[]
+  homeDetails: HomeDetails
   carpetArea: number
   onUpdate: (serviceItems: ServiceItem[]) => void
   onNext: () => void
@@ -11,11 +12,34 @@ interface ServicesStepProps {
 
 const ServicesStep: React.FC<ServicesStepProps> = ({ 
   serviceItems, 
+  homeDetails,
   carpetArea, 
   onUpdate, 
   onNext, 
   onPrev 
 }) => {
+  // Filter services based on quality tier
+  const getFilteredServices = () => {
+    const qualityTier = homeDetails.qualityTier.toLowerCase()
+    
+    return serviceItems.filter(service => {
+      // Always show general services (electrical, false-ceiling, etc.)
+      const generalServices = ['electrical', 'false-ceiling', 'sofa-dining', 'full-house-painting']
+      if (generalServices.includes(service.id)) {
+        return true
+      }
+      
+      // For additional add-ins, only show items matching the selected quality tier
+      if (service.id.includes('-premium') || service.id.includes('-luxury')) {
+        return service.id.includes(`-${qualityTier}`)
+      }
+      
+      return true
+    })
+  }
+
+  const filteredServices = getFilteredServices()
+
   const toggleServiceItem = (itemId: string) => {
     const updatedItems = serviceItems.map(item => 
       item.id === itemId ? { ...item, selected: !item.selected } : item
@@ -35,7 +59,15 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
       'electrical': Zap,
       'false-ceiling': Home,
       'sofa-dining': Sofa,
-      'full-house-painting': Paintbrush2
+      'full-house-painting': Paintbrush2,
+      'sofa-premium': Sofa,
+      'sofa-luxury': Sofa,
+      'dining-table-premium': UtensilsCrossed,
+      'dining-table-luxury': UtensilsCrossed,
+      'carpets-premium': Home,
+      'carpets-luxury': Home,
+      'designer-lights-premium': Lightbulb,
+      'designer-lights-luxury': Lightbulb
     }
     return icons[serviceId] || Settings
   }
@@ -82,7 +114,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
     )
   }
 
-  const selectedServices = serviceItems.filter(service => service.selected)
+  const selectedServices = filteredServices.filter(service => service.selected)
   const totalServiceCost = selectedServices.reduce((total, service) => total + calculateServicePrice(service), 0)
 
   return (
@@ -98,8 +130,8 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
         </div>
 
         {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          {serviceItems.map((service) => (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          {filteredServices.map((service) => (
             <ServiceCard key={service.id} service={service} />
           ))}
         </div>
