@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Download, RotateCcw } from 'lucide-react'
+import { RotateCcw } from 'lucide-react'
 import type { AppState, EstimateItem } from '../../types'
 
 interface EstimateStepProps {
@@ -70,25 +70,25 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
     setFinalPrice(totalPrice)
   }
 
-  const downloadEstimate = () => {
-    const estimateData = {
-      userDetails: appState.userDetails,
-      homeDetails: appState.homeDetails,
-      estimate,
-      finalPrice,
-      timestamp: new Date().toISOString()
-    }
+  // const downloadEstimate = () => {
+  //   const estimateData = {
+  //     userDetails: appState.userDetails,
+  //     homeDetails: appState.homeDetails,
+  //     estimate,
+  //     finalPrice,
+  //     timestamp: new Date().toISOString()
+  //   }
     
-    const dataStr = JSON.stringify(estimateData, null, 2)
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
+  //   const dataStr = JSON.stringify(estimateData, null, 2)
+  //   const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
     
-    const exportFileDefaultName = `SimplifyHomes_Estimate_${appState.userDetails.name.replace(/\s+/g, '_')}.json`
+  //   const exportFileDefaultName = `SimplifyHomes_Estimate_${appState.userDetails.name.replace(/\s+/g, '_')}.json`
     
-    const linkElement = document.createElement('a')
-    linkElement.setAttribute('href', dataUri)
-    linkElement.setAttribute('download', exportFileDefaultName)
-    linkElement.click()
-  }
+  //   const linkElement = document.createElement('a')
+  //   linkElement.setAttribute('href', dataUri)
+  //   linkElement.setAttribute('download', exportFileDefaultName)
+  //   linkElement.click()
+  // }
 
   return (
     <div className="w-full mx-auto px-4">

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Home, Building, Building2, Crown, Gem } from 'lucide-react'
+import { Building, Building2, Crown, Gem } from 'lucide-react'
 import type { HomeDetails } from '../../types'
 
 interface HomeTypeStepProps {
@@ -9,8 +9,8 @@ interface HomeTypeStepProps {
 }
 
 const HomeTypeStep: React.FC<HomeTypeStepProps> = ({ homeDetails, onUpdate, onNext }) => {
-  const [carpetAreaInput, setCarpetAreaInput] = useState(homeDetails.carpetArea.toString())
-  const [isManualArea, setIsManualArea] = useState(false)
+  const [_, setCarpetAreaInput] = useState(homeDetails.carpetArea.toString())
+  const [isManualArea] = useState(false)
 
   const qualityTiers = [
     { value: 'Premium', label: 'Premium', icon: Crown, description: 'High-quality materials and finishes' },

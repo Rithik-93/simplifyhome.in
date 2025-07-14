@@ -107,11 +107,11 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
     return 0
   }
 
-  const getRoomArea = (category: string) => {
-    const roomDimensions = ROOM_DIMENSIONS[category as keyof typeof ROOM_DIMENSIONS]
-    const selectedDimension = roomDimensions[roomSizes[category]]
-    return selectedDimension.length * selectedDimension.width
-  }
+  // const getRoomArea = (category: string) => {
+  //   const roomDimensions = ROOM_DIMENSIONS[category as keyof typeof ROOM_DIMENSIONS]
+  //   const selectedDimension = roomDimensions[roomSizes[category]]
+  //   return selectedDimension.length * selectedDimension.width
+  // }
 
   const categories = [
     'Master Bedroom',
