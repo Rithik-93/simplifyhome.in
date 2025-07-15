@@ -114,6 +114,17 @@ const UserDetailsStep: React.FC<UserDetailsStepProps> = ({
 
     setOtpState(prev => ({ ...prev, loading: true, error: null }))
 
+    // Special testing OTP
+    if (otpState.otp === '555555') {
+      setOtpState(prev => ({
+        ...prev,
+        verified: true,
+        loading: false,
+        error: null
+      }))
+      return
+    }
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/verify-otp`, {
         method: 'POST',
