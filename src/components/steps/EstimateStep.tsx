@@ -112,7 +112,7 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
         {/* Header */}
         <div className="bg-black text-yellow-400 p-3 sm:p-6 w-full max-w-full overflow-x-hidden">
           <div className="text-center">
-            <h2 className="text-lg sm:text-xl lg:text-2xl font-bold mb-2 sm:mb-3">
+            <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold mb-2 sm:mb-3">
               Your Interior Estimate
             </h2>
             <p className="text-yellow-200 text-sm sm:text-base">
@@ -125,19 +125,19 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
         <div className="p-3 sm:p-4 bg-yellow-50 border-b-2 border-yellow-400 w-full max-w-full overflow-x-hidden">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 text-xs sm:text-sm w-full max-w-full overflow-x-hidden">
             <div className="min-w-0">
-              <div className="font-bold text-black">Name</div>
+              <div className="font-semibold text-black">Name</div>
               <div className="text-gray-800 truncate">{appState.userDetails.name}</div>
             </div>
             <div className="min-w-0">
-              <div className="font-bold text-black">Mobile</div>
+              <div className="font-semibold text-black">Mobile</div>
               <div className="text-gray-800 truncate">{appState.userDetails.mobile}</div>
             </div>
             <div className="min-w-0">
-              <div className="font-bold text-black">Email</div>
+              <div className="font-semibold text-black">Email</div>
               <div className="text-gray-800 truncate">{appState.userDetails.email}</div>
             </div>
             <div className="min-w-0">
-              <div className="font-bold text-black">City</div>
+              <div className="font-semibold text-black">City</div>
               <div className="text-gray-800 truncate">{appState.userDetails.city}</div>
             </div>
           </div>
@@ -147,23 +147,23 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
         <div className="p-3 sm:p-4 bg-gray-50 border-b-2 border-gray-200">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 text-xs sm:text-sm">
             <div>
-              <div className="font-bold text-black">Home Type</div>
-              <div className="text-black text-base sm:text-lg font-bold">{appState.homeDetails.homeType}</div>
+              <div className="font-semibold text-black">Home Type</div>
+              <div className="text-black text-base sm:text-lg font-semibold">{appState.homeDetails.homeType}</div>
             </div>
             <div>
-              <div className="font-bold text-black">Quality Tier</div>
-              <div className="text-black text-base sm:text-lg font-bold">{appState.homeDetails.qualityTier}</div>
+              <div className="font-semibold text-black">Quality Tier</div>
+              <div className="text-black text-base sm:text-lg font-semibold">{appState.homeDetails.qualityTier}</div>
             </div>
             <div>
-              <div className="font-bold text-black">Carpet Area</div>
-              <div className="text-black text-base sm:text-lg font-bold">{appState.homeDetails.carpetArea} sq.ft</div>
+              <div className="font-semibold text-black">Carpet Area</div>
+              <div className="text-black text-base sm:text-lg font-semibold">{appState.homeDetails.carpetArea} sq.ft</div>
             </div>
           </div>
         </div>
 
         {/* Estimate Details */}
         <div className="p-3 sm:p-4 w-full max-w-full overflow-x-hidden">
-          <h3 className="text-base sm:text-lg font-bold text-black mb-3 sm:mb-4">
+          <h3 className="text-base sm:text-lg font-semibold text-black mb-3 sm:mb-4">
             Estimate Details
           </h3>
           
@@ -171,10 +171,10 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
             {estimate.map((categoryEstimate, index) => (
               <div key={index} className="border-2 border-yellow-400 rounded-lg sm:rounded-xl p-3 sm:p-4 w-full max-w-full min-w-0 overflow-hidden">
                 <div className="flex justify-between items-center mb-2 sm:mb-3">
-                  <h4 className="text-sm sm:text-base font-bold text-black flex-1 truncate pr-2">
+                  <h4 className="text-sm sm:text-base font-semibold text-black flex-1 truncate pr-2">
                     {categoryEstimate.category}
                   </h4>
-                  <div className="text-sm sm:text-base font-bold text-black bg-yellow-100 px-2 sm:px-3 py-1 rounded-lg flex-shrink-0">
+                  <div className="text-sm sm:text-base font-semibold text-black bg-yellow-100 px-2 sm:px-3 py-1 rounded-lg flex-shrink-0">
                     ₹{categoryEstimate.totalPrice.toLocaleString()}
                   </div>
                 </div>
@@ -183,7 +183,7 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
                   {categoryEstimate.items.map((item, itemIndex) => (
                     <div key={itemIndex} className="flex justify-between items-center text-xs sm:text-sm border-b border-gray-200 pb-1 w-full max-w-full">
                       <span className="text-gray-700 font-medium flex-1 truncate pr-2">{item.name}</span>
-                      <span className="font-bold text-black flex-shrink-0">
+                      <span className="font-semibold text-black flex-shrink-0">
                         ₹{item.price.toLocaleString()}
                       </span>
                     </div>
@@ -196,10 +196,10 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
           {/* Final Price */}
           <div className="mt-4 sm:mt-6 bg-black rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-yellow-400">
             <div className="flex justify-between items-center">
-              <div className="text-base sm:text-xl font-bold text-yellow-400">
+              <div className="text-base sm:text-xl font-semibold text-yellow-400">
                 Final Price
               </div>
-              <div className="text-lg sm:text-2xl font-bold text-yellow-400">
+              <div className="text-lg sm:text-2xl font-semibold text-yellow-400">
                 ₹{finalPrice.toLocaleString()}
               </div>
             </div>
@@ -207,8 +207,8 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
         </div>
 
         {/* Material Details */}
-        <div className="p-3 sm:p-4 bg-gray-50 border-t-2 border-gray-200">
-          <h3 className="text-base sm:text-lg font-bold text-black mb-3 sm:mb-4">
+        {/* <div className="p-3 sm:p-4 bg-gray-50 border-t-2 border-gray-200">
+          <h3 className="text-base sm:text-lg font-semibold text-black mb-3 sm:mb-4">
             Material Details
           </h3>
           
@@ -216,15 +216,15 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
             <div>
               <div className="space-y-2">
                 <div>
-                  <span className="font-bold text-black">Base Material:</span>
+                  <span className="font-semibold text-black">Base Material:</span>
                   <span className="text-gray-800 ml-2 block sm:inline">Moisture Resistance ISI Grade Plywood</span>
                 </div>
                 <div>
-                  <span className="font-bold text-black">Furniture Internal:</span>
+                  <span className="font-semibold text-black">Furniture Internal:</span>
                   <span className="text-gray-800 ml-2 block sm:inline">0.8mm White Laminate</span>
                 </div>
                 <div>
-                  <span className="font-bold text-black">Furniture Outside:</span>
+                  <span className="font-semibold text-black">Furniture Outside:</span>
                   <span className="text-gray-800 ml-2 block sm:inline">1mm Color Laminate (₹1,000 - ₹1,400 per sheet)</span>
                 </div>
               </div>
@@ -232,34 +232,34 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
             <div>
               <div className="space-y-2">
                 <div>
-                  <span className="font-bold text-black">Hardware:</span>
+                  <span className="font-semibold text-black">Hardware:</span>
                   <span className="text-gray-800 ml-2 block sm:inline">Ebco and Moda Germany (Normal Close)</span>
                 </div>
                 <div>
-                  <span className="font-bold text-black">Paint:</span>
+                  <span className="font-semibold text-black">Paint:</span>
                   <span className="text-gray-800 ml-2 block sm:inline">Asian Royal Paint - Royal Shine</span>
                 </div>
                 <div>
-                  <span className="font-bold text-black">Electrical:</span>
+                  <span className="font-semibold text-black">Electrical:</span>
                   <span className="text-gray-800 ml-2 block sm:inline">Polycab Wire with Labour</span>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Action Buttons */}
         <div className="p-3 sm:p-4 bg-white border-t-2 border-gray-200">
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
               onClick={onPrev}
-              className="px-4 sm:px-6 py-3 text-sm sm:text-base font-bold rounded-lg sm:rounded-xl border-2 border-black text-black hover:bg-black hover:text-yellow-400 transition-all duration-300 transform hover:-translate-y-1 min-h-[44px]"
+              className="order-2 sm:order-1 px-4 sm:px-6 py-3 text-sm sm:text-base font-semibold rounded-lg sm:rounded-xl border-2 border-black text-black hover:bg-black hover:text-yellow-400 transition-all duration-300 transform hover:-translate-y-1 min-h-[44px]"
             >
               ← Edit Details
             </button>
             <button
               onClick={onRestart}
-              className="px-4 sm:px-6 py-3 text-sm sm:text-base font-bold rounded-lg sm:rounded-xl bg-black text-yellow-400 hover:bg-gray-800 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center gap-2 min-h-[44px]"
+              className="order-1 sm:order-2 px-4 sm:px-6 py-3 text-sm sm:text-base font-semibold rounded-lg sm:rounded-xl bg-black text-yellow-400 hover:bg-gray-800 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center gap-2 min-h-[44px]"
               style={{ backgroundColor: '#000000', color: '#FFBD01' }}
             >
               <RotateCcw size={16} />
@@ -271,7 +271,7 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
         {/* Contact Information */}
         <div className="p-3 sm:p-4 bg-yellow-50 border-t-2 border-yellow-400">
           <div className="text-center">
-            <h4 className="text-sm sm:text-base font-bold text-black mb-2 sm:mb-3">
+            <h4 className="text-sm sm:text-base font-semibold text-black mb-2 sm:mb-3">
               Ready to Get Started?
             </h4>
             <p className="text-gray-700 mb-2 sm:mb-3 text-xs sm:text-sm">
@@ -279,10 +279,10 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
             </p>
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center text-xs sm:text-sm">
               <div className="text-black">
-                <span className="font-bold">Website:</span> simplifyhomes.in
+                <span className="font-semibold">Website:</span> simplifyhomes.in
               </div>
               <div className="text-black">
-                <span className="font-bold">Email:</span> info@simplifyhomes.in
+                <span className="font-semibold">Email:</span> info@simplifyhomes.in
               </div>
             </div>
           </div>

@@ -12,12 +12,12 @@ export interface DimensionOption {
 
 export interface ItemPricing {
   area: {
-    luxury: number;
-    premium: number;
+    luxury: number; // Area in square feet required for this item
+    premium: number; // Area in square feet required for this item
   };
   price: {
-    luxury: number;
-    premium: number;
+    luxury: number; // Price per square foot - multiply by area to get total cost
+    premium: number; // Price per square foot - multiply by area to get total cost
   };
 }
 
@@ -30,15 +30,15 @@ export interface FurnitureItem {
   pricing: {
     [roomSize: string]: ItemPricing;
   };
-  totalPrice?: number; // Calculated price based on selected room size and quality tier
+  totalPrice?: number; // Calculated as: pricing[roomSize].area[tier] × pricing[roomSize].price[tier]
 }
 
 export interface SingleLineItem {
   id: string;
   name: string;
   selected: boolean;
-  pricePerSqFt: number;
-  totalPrice?: number; // Calculated price based on carpet area
+  pricePerSqFt: number; // Price per square foot - multiply by carpet area to get total cost
+  totalPrice?: number; // Calculated as: pricePerSqFt × carpetArea
 }
 
 export interface RoomSizeSelection {
@@ -49,9 +49,10 @@ export interface ServiceItem {
   id: string;
   name: string;
   selected: boolean;
-  basePrice: number;
-  pricePerSqFt: number;
+  basePrice: number; // Fixed base price for the service
+  pricePerSqFt: number; // Additional price per square foot (if applicable)
   description: string;
+  // Total cost = basePrice + (pricePerSqFt × carpetArea)
 }
 
 export interface UserDetails {
@@ -377,9 +378,9 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     quantity: 1,
     category: 'Modular Kitchen',
     pricing: {
-      '8 × 10 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 27500, premium: 20500 } },
-      '10 × 12 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 27500, premium: 20500 } },
-      '12 × 14 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 27500, premium: 20500 } }
+      '8 x 10 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 27500, premium: 20500 } },
+      '10 x 12 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 27500, premium: 20500 } },
+      '12 x 14 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 27500, premium: 20500 } }
     }
   },
   {
@@ -389,9 +390,9 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     quantity: 1,
     category: 'Modular Kitchen',
     pricing: {
-      '8 × 10 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 8500, premium: 6500 } },
-      '10 × 12 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 8500, premium: 6500 } },
-      '12 × 14 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 8500, premium: 6500 } }
+      '8 x 10 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 8500, premium: 6500 } },
+      '10 x 12 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 8500, premium: 6500 } },
+      '12 x 14 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 8500, premium: 6500 } }
     }
   }
 ];

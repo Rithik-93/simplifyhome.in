@@ -86,7 +86,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
               />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm sm:text-base font-bold text-black leading-tight truncate">{service.name}</h3>
+              <h3 className="text-sm sm:text-base font-semibold text-black leading-tight truncate">{service.name}</h3>
               <p className="text-xs sm:text-sm text-gray-700 mt-1 leading-tight truncate">{service.description}</p>
             </div>
           </div>
@@ -103,10 +103,10 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
         <div className="space-y-1 sm:space-y-2">
           {service.basePrice > 0 && (
             <div className="text-xs sm:text-sm text-gray-700 truncate">
-              <span className="font-bold">Base Price:</span> ₹{service.basePrice.toLocaleString()}
+              <span className="font-semibold">Base Price:</span> ₹{service.basePrice.toLocaleString()}
             </div>
           )}
-          <div className="text-sm sm:text-base font-bold text-black bg-yellow-100 px-2 sm:px-3 py-1 rounded-lg">
+          <div className="text-sm sm:text-base font-semibold text-black bg-yellow-100 px-2 sm:px-3 py-1 rounded-lg">
             Total: ₹{calculateServicePrice(service).toLocaleString()}
           </div>
         </div>
@@ -121,7 +121,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
     <div className="w-full max-w-full mx-auto px-2 sm:px-4 overflow-x-hidden">
       <div className="bg-white rounded-lg sm:rounded-xl shadow-lg sm:shadow-xl p-3 sm:p-6 border-2 border-yellow-400 max-w-5xl mx-auto w-full overflow-x-hidden">
         <div className="text-center mb-4 sm:mb-6">
-          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-black mb-2 sm:mb-3">
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-black mb-2 sm:mb-3">
             Optional Services
           </h2>
           <p className="text-sm sm:text-base text-gray-700">
@@ -130,7 +130,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
         </div>
 
         {/* Services Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6 w-full max-w-full overflow-x-hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6 w-full max-w-full pt-2 overflow-x-hidden">
           {filteredServices.map((service) => (
             <ServiceCard key={service.id} service={service} />
           ))}
@@ -139,18 +139,18 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
         {/* Selected Services Summary */}
         {selectedServices.length > 0 && (
           <div className="mb-4 sm:mb-6 bg-yellow-50 rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-yellow-400">
-            <h4 className="text-sm sm:text-base font-bold text-black mb-2 sm:mb-3">
+            <h4 className="text-sm sm:text-base font-semibold text-black mb-2 sm:mb-3">
               Selected Services Summary
             </h4>
             <div className="space-y-2 sm:space-y-3">
               {selectedServices.map((service) => (
                 <div key={service.id} className="flex justify-between items-center bg-white rounded-lg p-2 sm:p-3 border-2 border-yellow-300 shadow-md">
                   <div className="flex-1 min-w-0">
-                    <div className="font-bold text-sm sm:text-base text-black">{service.name}</div>
+                    <div className="font-semibold text-sm sm:text-base text-black">{service.name}</div>
                     <div className="text-xs sm:text-sm text-gray-700 truncate">{service.description}</div>
                   </div>
                   <div className="text-right ml-2 flex-shrink-0">
-                    <div className="font-bold text-sm sm:text-base text-black">
+                    <div className="font-semibold text-sm sm:text-base text-black">
                       ₹{calculateServicePrice(service).toLocaleString()}
                     </div>
                   </div>
@@ -158,10 +158,10 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
               ))}
               <div className="border-t-2 border-yellow-400 pt-2 sm:pt-3">
                 <div className="flex justify-between items-center bg-black rounded-lg p-2 sm:p-3">
-                  <div className="text-sm sm:text-base font-bold text-yellow-400">
+                  <div className="text-sm sm:text-base font-semibold text-yellow-400">
                     Total Services Cost:
                   </div>
-                  <div className="text-base sm:text-lg font-bold text-yellow-400">
+                  <div className="text-base sm:text-lg font-semibold text-yellow-400">
                     ₹{totalServiceCost.toLocaleString()}
                   </div>
                 </div>
@@ -172,16 +172,16 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
 
         {/* Service Details */}
         <div className="mb-4 sm:mb-6 bg-gray-50 rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-gray-200">
-          <h4 className="text-sm sm:text-base font-bold text-black mb-2 sm:mb-3">
+          <h4 className="text-sm sm:text-base font-semibold text-black mb-2 sm:mb-3">
             Service Details
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm text-gray-700">
             <div>
-              <div className="font-bold">Carpet Area:</div>
+              <div className="font-semibold">Carpet Area:</div>
               <div className="text-sm sm:text-base font-medium">{carpetArea} sq.ft</div>
             </div>
             <div>
-              <div className="font-bold">Applicable Services:</div>
+              <div className="font-semibold">Applicable Services:</div>
               <div>Electrical & Painting are per sq.ft</div>
             </div>
           </div>
@@ -191,13 +191,13 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
         <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0">
           <button
             onClick={onPrev}
-            className="px-4 sm:px-6 py-3 text-sm sm:text-base font-bold rounded-lg sm:rounded-xl border-2 border-black text-black hover:bg-black hover:text-yellow-400 transition-all duration-300 transform hover:-translate-y-1 min-h-[44px]"
+            className="order-2 sm:order-1 px-4 sm:px-6 py-3 text-sm sm:text-base font-semibold rounded-lg sm:rounded-xl border-2 border-black text-black hover:bg-black hover:text-yellow-400 transition-all duration-300 transform hover:-translate-y-1 min-h-[44px]"
           >
             ← Previous
           </button>
           <button
             onClick={onNext}
-            className="px-4 sm:px-6 py-3 text-sm sm:text-base font-bold rounded-lg sm:rounded-xl bg-black text-yellow-400 hover:bg-gray-800 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 min-h-[44px]"
+            className="order-1 sm:order-2 px-4 sm:px-6 py-3 text-sm sm:text-base font-semibold rounded-lg sm:rounded-xl bg-black text-yellow-400 hover:bg-gray-800 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 min-h-[44px]"
           >
             Continue to Details →
           </button>

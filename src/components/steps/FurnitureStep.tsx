@@ -32,14 +32,28 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
     'Modular Kitchen': 0
   })
 
-  const calculateItemPrice = (item: FurnitureItem, dimensionIndex: number) => {
+  const calculateItemPricePerSqFt = (item: FurnitureItem, dimensionIndex: number) => {
     const roomDimensions = ROOM_DIMENSIONS[item.category as keyof typeof ROOM_DIMENSIONS]
     const selectedDimension = roomDimensions[dimensionIndex]
     const roomSizeKey = selectedDimension.label
     const qualityTier = homeDetails.qualityTier.toLowerCase() as 'luxury' | 'premium'
     
     if (item.pricing[roomSizeKey]) {
-      return item.pricing[roomSizeKey].price[qualityTier]
+      return item.pricing[roomSizeKey].price[qualityTier] // Return price per sq ft only
+    }
+    return 0
+  }
+
+  const calculateItemTotalPrice = (item: FurnitureItem, dimensionIndex: number) => {
+    const roomDimensions = ROOM_DIMENSIONS[item.category as keyof typeof ROOM_DIMENSIONS]
+    const selectedDimension = roomDimensions[dimensionIndex]
+    const roomSizeKey = selectedDimension.label
+    const qualityTier = homeDetails.qualityTier.toLowerCase() as 'luxury' | 'premium'
+    
+    if (item.pricing[roomSizeKey]) {
+      const area = item.pricing[roomSizeKey].area[qualityTier]
+      const pricePerSqFt = item.pricing[roomSizeKey].price[qualityTier]
+      return area * pricePerSqFt // Total price = area × price per sq ft (for final calculation)
     }
     return 0
   }
@@ -51,7 +65,7 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
     if (needsUpdate) {
       const updatedItems = furnitureItems.map(item => ({
         ...item,
-        totalPrice: calculateItemPrice(item, roomSizes[item.category])
+        totalPrice: calculateItemTotalPrice(item, roomSizes[item.category])
       }))
       onUpdateFurniture(updatedItems)
     }
@@ -109,7 +123,7 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
     const updatedItems = furnitureItems.map(item => 
       item.category === category ? { 
         ...item, 
-        totalPrice: calculateItemPrice(item, dimensionIndex)
+        totalPrice: calculateItemTotalPrice(item, dimensionIndex)
       } : item
     )
     onUpdateFurniture(updatedItems)
@@ -180,7 +194,7 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
               Area: {getItemArea(item, item.category)} sq.ft ({homeDetails.qualityTier})
             </div>
             <div className="text-xs text-yellow-600 font-medium">
-              ₹{calculateItemPrice(item, roomSizes[item.category]).toLocaleString()}
+              ₹{calculateItemPricePerSqFt(item, roomSizes[item.category]).toLocaleString()}/sq.ft
             </div>
           </div>
         </label>
@@ -333,7 +347,7 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
               {/* Furniture Items */}
               {furnitureItems.filter(item => item.selected).map((item) => {
                 const itemArea = getItemArea(item, item.category)
-                const totalPrice = calculateItemPrice(item, roomSizes[item.category])
+                const totalPrice = calculateItemTotalPrice(item, roomSizes[item.category])
                 return (
                   <div key={item.id} className="bg-white rounded p-2 sm:p-3 border border-yellow-400 shadow-sm min-w-0 overflow-hidden">
                     <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">{item.name}</div>
@@ -354,7 +368,7 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
         <div className="flex flex-col sm:flex-row justify-between items-center mt-4 sm:mt-6 gap-3 sm:gap-0 w-full max-w-full">
           <button
             onClick={onPrev}
-            className="flex items-center justify-center w-full sm:w-auto px-4 sm:px-6 py-3 text-sm sm:text-base font-medium rounded-lg border-2 border-gray-400 text-gray-700 hover:bg-gray-50 hover:border-gray-500 transition-all duration-200 min-h-[44px]"
+            className="order-2 sm:order-1 flex items-center justify-center w-full sm:w-auto px-4 sm:px-6 py-3 text-sm sm:text-base font-medium rounded-lg border-2 border-gray-400 text-gray-700 hover:bg-gray-50 hover:border-gray-500 transition-all duration-200 min-h-[44px]"
           >
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -363,7 +377,7 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
           </button>
           <button
             onClick={onNext}
-            className="flex items-center justify-center w-full sm:w-auto px-4 sm:px-6 py-3 text-sm sm:text-base font-medium rounded-lg bg-black text-yellow-400 hover:bg-gray-800 transition-all duration-200 min-h-[44px]"
+            className="order-1 sm:order-2 flex items-center justify-center w-full sm:w-auto px-4 sm:px-6 py-3 text-sm sm:text-base font-medium rounded-lg bg-black text-yellow-400 hover:bg-gray-800 transition-all duration-200 min-h-[44px]"
           >
             Continue to Services
             <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

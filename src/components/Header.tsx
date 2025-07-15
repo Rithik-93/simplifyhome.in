@@ -9,10 +9,10 @@ const Header: React.FC<HeaderProps> = () => {
             <img
               src="https://simplifyhome.in/wp-content/uploads/2024/11/Simplify-Home-Logo-1-TM-1-1.png"
               alt="SimplifyHomes"
-              className="h-8 sm:h-10 lg:h-12 w-28 sm:w-32 lg:w-48 flex-shrink-0 object-contain"
+              className="h-8 sm:h-10 lg:h-12 w-28 sm:w-32 lg:w-52 flex-shrink-0 object-contain"
             />
             <div className="flex-1 min-w-0">
-              <h1 className="text-xs sm:text-lg lg:text-xl font-semibold text-white leading-tight truncate">
+              <h1 className="text-xs sm:text-lg lg:text-lg font-semibold text-white leading-tight truncate">
                 Interior Cost Calculator
               </h1>
               <p className="text-yellow-300 text-xs sm:text-sm lg:text-sm font-medium leading-tight hidden sm:block truncate">
