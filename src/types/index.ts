@@ -426,10 +426,10 @@ export const DEFAULT_SINGLE_LINE_ITEMS: SingleLineItem[] = [
 
 export const DEFAULT_SERVICE_ITEMS: ServiceItem[] = [
   // General Services (carpet area based pricing)
-  { id: 'electrical', name: 'Electrical & Wiring', selected: false, basePrice: 0, pricePerSqFt: 250, description: 'Electrical work and wiring' },
-  { id: 'false-ceiling', name: 'False Ceiling', selected: false, basePrice: 0, pricePerSqFt: 900, description: 'False ceiling installation' },
-  { id: 'full-house-painting', name: 'Full House Painting', selected: false, basePrice: 0, pricePerSqFt: 200, description: 'Complete house painting' },
-  { id: 'sofa-dining', name: 'Sofa & Dining Combo', selected: false, basePrice: 0, pricePerSqFt: 0, description: 'Sofa and dining table combo' },
+  // { id: 'electrical', name: 'Electrical & Wiring', selected: false, basePrice: 0, pricePerSqFt: 250, description: 'Electrical work and wiring' },
+  // { id: 'false-ceiling', name: 'False Ceiling', selected: false, basePrice: 0, pricePerSqFt: 900, description: 'False ceiling installation' },
+  // { id: 'full-house-painting', name: 'Full House Painting', selected: false, basePrice: 0, pricePerSqFt: 200, description: 'Complete house painting' },
+  // { id: 'sofa-dining', name: 'Sofa & Dining Combo', selected: false, basePrice: 0, pricePerSqFt: 0, description: 'Sofa and dining table combo' },
   
   // Additional Add-ins with dynamic pricing
   { 
