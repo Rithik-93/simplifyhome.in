@@ -49,10 +49,16 @@ export interface ServiceItem {
   id: string;
   name: string;
   selected: boolean;
-  basePrice: number; // Fixed base price for the service
+  basePrice: number; // Fixed base price for the service (for general services)
   pricePerSqFt: number; // Additional price per square foot (if applicable)
   description: string;
-  // Total cost = basePrice + (pricePerSqFt × carpetArea)
+  pricing?: {
+    // Dynamic pricing based on home type and quality tier
+    [homeType: string]: {
+      [qualityTier: string]: number;
+    };
+  };
+  // Total cost = basePrice + (pricePerSqFt × carpetArea) OR pricing[homeType][qualityTier] if pricing exists
 }
 
 export interface UserDetails {
@@ -378,9 +384,9 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     quantity: 1,
     category: 'Modular Kitchen',
     pricing: {
-      '8 x 10 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 27500, premium: 20500 } },
-      '10 x 12 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 27500, premium: 20500 } },
-      '12 x 14 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 27500, premium: 20500 } }
+      '8 × 10 ft': { area: { luxury: 1, premium: 1 }, price: { luxury: 27500, premium: 20500 } },
+      '10 × 12 ft': { area: { luxury: 1, premium: 1 }, price: { luxury: 27500, premium: 20500 } },
+      '12 × 14 ft': { area: { luxury: 1, premium: 1 }, price: { luxury: 27500, premium: 20500 } }
     }
   },
   {
@@ -390,9 +396,9 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     quantity: 1,
     category: 'Modular Kitchen',
     pricing: {
-      '8 x 10 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 8500, premium: 6500 } },
-      '10 x 12 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 8500, premium: 6500 } },
-      '12 x 14 ft': { area: { luxury: 0, premium: 0 }, price: { luxury: 8500, premium: 6500 } }
+      '8 × 10 ft': { area: { luxury: 1, premium: 1 }, price: { luxury: 8500, premium: 6500 } },
+      '10 × 12 ft': { area: { luxury: 1, premium: 1 }, price: { luxury: 8500, premium: 6500 } },
+      '12 × 14 ft': { area: { luxury: 1, premium: 1 }, price: { luxury: 8500, premium: 6500 } }
     }
   }
 ];
@@ -419,15 +425,59 @@ export const DEFAULT_SINGLE_LINE_ITEMS: SingleLineItem[] = [
 ];
 
 export const DEFAULT_SERVICE_ITEMS: ServiceItem[] = [
-  // Additional Add-ins - Premium Tier
-  { id: 'sofa-premium', name: 'Sofa (Premium)', selected: false, basePrice: 110000, pricePerSqFt: 0, description: 'Premium quality sofa for 3BHK' },
-  { id: 'dining-table-premium', name: 'Dining Table (Premium)', selected: false, basePrice: 95000, pricePerSqFt: 0, description: 'Premium dining table for 3BHK' },
-  { id: 'carpets-premium', name: 'Carpets (Premium)', selected: false, basePrice: 15000, pricePerSqFt: 0, description: 'Premium carpets for 3BHK' },
-  { id: 'designer-lights-premium', name: 'Designer Lights (Premium)', selected: false, basePrice: 15000, pricePerSqFt: 0, description: 'Premium designer lights for 3BHK' },
+  // General Services (carpet area based pricing)
+  { id: 'electrical', name: 'Electrical & Wiring', selected: false, basePrice: 0, pricePerSqFt: 250, description: 'Electrical work and wiring' },
+  { id: 'false-ceiling', name: 'False Ceiling', selected: false, basePrice: 0, pricePerSqFt: 900, description: 'False ceiling installation' },
+  { id: 'full-house-painting', name: 'Full House Painting', selected: false, basePrice: 0, pricePerSqFt: 200, description: 'Complete house painting' },
+  { id: 'sofa-dining', name: 'Sofa & Dining Combo', selected: false, basePrice: 0, pricePerSqFt: 0, description: 'Sofa and dining table combo' },
   
-  // Additional Add-ins - Luxury Tier
-  { id: 'sofa-luxury', name: 'Sofa (Luxury)', selected: false, basePrice: 150000, pricePerSqFt: 0, description: 'Luxury quality sofa for 3BHK' },
-  { id: 'dining-table-luxury', name: 'Dining Table (Luxury)', selected: false, basePrice: 125000, pricePerSqFt: 0, description: 'Luxury dining table for 3BHK' },
-  { id: 'carpets-luxury', name: 'Carpets (Luxury)', selected: false, basePrice: 35000, pricePerSqFt: 0, description: 'Luxury carpets for 3BHK' },
-  { id: 'designer-lights-luxury', name: 'Designer Lights (Luxury)', selected: false, basePrice: 22000, pricePerSqFt: 0, description: 'Luxury designer lights for 3BHK' },
+  // Additional Add-ins with dynamic pricing
+  { 
+    id: 'sofa-premium', 
+    name: 'Sofa (Premium)', 
+    selected: false, 
+    basePrice: 0, 
+    pricePerSqFt: 0, 
+    description: 'Premium quality sofa for 3BHK',
+    pricing: {
+      '2BHK': { 'Premium': 75000, 'Luxury': 90000 },
+      '3BHK': { 'Premium': 110000, 'Luxury': 150000 }
+    }
+  },
+  { 
+    id: 'dining-table-premium', 
+    name: 'Dining Table (Premium)', 
+    selected: false, 
+    basePrice: 0, 
+    pricePerSqFt: 0, 
+    description: 'Premium dining table for 3BHK',
+    pricing: {
+      '2BHK': { 'Premium': 60000, 'Luxury': 80000 },
+      '3BHK': { 'Premium': 95000, 'Luxury': 125000 }
+    }
+  },
+  { 
+    id: 'carpets-premium', 
+    name: 'Carpets (Premium)', 
+    selected: false, 
+    basePrice: 0, 
+    pricePerSqFt: 0, 
+    description: 'Premium carpets for 3BHK',
+    pricing: {
+      '2BHK': { 'Premium': 0, 'Luxury': 10000 },
+      '3BHK': { 'Premium': 15000, 'Luxury': 35000 }
+    }
+  },
+  { 
+    id: 'designer-lights-premium', 
+    name: 'Designer Lights (Premium)', 
+    selected: false, 
+    basePrice: 0, 
+    pricePerSqFt: 0, 
+    description: 'Premium designer lights for 3BHK',
+    pricing: {
+      '2BHK': { 'Premium': 8000, 'Luxury': 15000 },
+      '3BHK': { 'Premium': 15000, 'Luxury': 22000 }
+    }
+  }
 ]; 

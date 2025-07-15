@@ -20,8 +20,6 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
 }) => {
   // Filter services based on quality tier
   const getFilteredServices = () => {
-    const qualityTier = homeDetails.qualityTier.toLowerCase()
-    
     return serviceItems.filter(service => {
       // Always show general services (electrical, false-ceiling, etc.)
       const generalServices = ['electrical', 'false-ceiling', 'sofa-dining', 'full-house-painting']
@@ -29,9 +27,10 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
         return true
       }
       
-      // For additional add-ins, only show items matching the selected quality tier
-      if (service.id.includes('-premium') || service.id.includes('-luxury')) {
-        return service.id.includes(`-${qualityTier}`)
+      // For additional add-ins with dynamic pricing, show all items
+      // The pricing will be calculated based on the selected quality tier
+      if (service.pricing) {
+        return true
       }
       
       return true
@@ -48,6 +47,15 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
   }
 
   const calculateServicePrice = (service: ServiceItem) => {
+    // If service has dynamic pricing, use it
+    if (service.pricing && homeDetails.homeType && homeDetails.qualityTier) {
+      const homeTypePrice = service.pricing[homeDetails.homeType]
+      if (homeTypePrice && homeTypePrice[homeDetails.qualityTier] !== undefined) {
+        return homeTypePrice[homeDetails.qualityTier]
+      }
+    }
+    
+    // Otherwise, use the standard pricing
     if (service.pricePerSqFt > 0) {
       return service.basePrice + (service.pricePerSqFt * carpetArea)
     }
@@ -61,22 +69,34 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
       'sofa-dining': Sofa,
       'full-house-painting': Paintbrush2,
       'sofa-premium': Sofa,
-      'sofa-luxury': Sofa,
       'dining-table-premium': UtensilsCrossed,
-      'dining-table-luxury': UtensilsCrossed,
       'carpets-premium': Home,
-      'carpets-luxury': Home,
-      'designer-lights-premium': Lightbulb,
-      'designer-lights-luxury': Lightbulb
+      'designer-lights-premium': Lightbulb
     }
     return icons[serviceId] || Settings
+  }
+
+  // Generate dynamic description based on home type
+  const getDynamicDescription = (service: ServiceItem) => {
+    return service.description.replace('3BHK', homeDetails.homeType)
+  }
+
+  // Generate dynamic service name based on quality tier
+  const getDynamicServiceName = (service: ServiceItem) => {
+    if (service.pricing && homeDetails.qualityTier) {
+      // For services with dynamic pricing, show the quality tier in the name
+      if (service.id.includes('-premium')) {
+        return service.name.replace('(Premium)', `(${homeDetails.qualityTier})`)
+      }
+    }
+    return service.name
   }
 
   const ServiceCard = ({ service }: { service: ServiceItem }) => {
     const IconComponent = getServiceIcon(service.id)
     
     return (
-      <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-gray-200 hover:border-yellow-400 transition-all duration-200 hover:shadow-lg transform hover:-translate-y-1 w-full max-w-full min-w-0 overflow-hidden">
+      <div className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 border-1 border-gray-200 hover:border-yellow-400 transition-all duration-200 hover:shadow-lg transform hover:-translate-y-1 w-full max-w-full min-w-0 overflow-hidden">
         <div className="flex items-start justify-between mb-2 sm:mb-3">
           <div className="flex items-center flex-1 min-w-0">
             <div className="mr-2 sm:mr-3 flex items-center justify-center flex-shrink-0">
@@ -86,8 +106,10 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
               />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm sm:text-base font-semibold text-black leading-tight truncate">{service.name}</h3>
-              <p className="text-xs sm:text-sm text-gray-700 mt-1 leading-tight truncate">{service.description}</p>
+              <h3 className="text-sm sm:text-base font-semibold text-black leading-tight truncate">{getDynamicServiceName(service)}</h3>
+              <p className="text-[10px] sm:text-xs text-gray-700 mt-1 leading-tight truncate">
+  {getDynamicDescription(service)}
+</p>
             </div>
           </div>
           <label className="flex items-center cursor-pointer ml-2 flex-shrink-0">
@@ -95,7 +117,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
               type="checkbox"
               checked={service.selected}
               onChange={() => toggleServiceItem(service.id)}
-              className="w-5 h-5 text-yellow-400 bg-gray-100 border-gray-300 rounded focus:ring-yellow-400 focus:ring-2"
+              className="w-5 h-5 text-yellow-400 hover:cursor-pointer bg-gray-100 border-gray-300 rounded"
             />
           </label>
         </div>
@@ -106,7 +128,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
               <span className="font-semibold">Base Price:</span> ₹{service.basePrice.toLocaleString()}
             </div>
           )}
-          <div className="text-sm sm:text-base font-semibold text-black bg-yellow-100 px-2 sm:px-3 py-1 rounded-lg">
+          <div className="text-sm sm:text-base font-medium text-black bg-gray-100 px-2 sm:px-3 py-1 rounded-lg">
             Total: ₹{calculateServicePrice(service).toLocaleString()}
           </div>
         </div>
@@ -146,8 +168,8 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
               {selectedServices.map((service) => (
                 <div key={service.id} className="flex justify-between items-center bg-white rounded-lg p-2 sm:p-3 border-2 border-yellow-300 shadow-md">
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-sm sm:text-base text-black">{service.name}</div>
-                    <div className="text-xs sm:text-sm text-gray-700 truncate">{service.description}</div>
+                    <div className="font-semibold text-sm sm:text-base text-black">{getDynamicServiceName(service)}</div>
+                    <div className="text-xs sm:text-sm text-gray-700 truncate">{getDynamicDescription(service)}</div>
                   </div>
                   <div className="text-right ml-2 flex-shrink-0">
                     <div className="font-semibold text-sm sm:text-base text-black">
@@ -171,21 +193,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
         )}
 
         {/* Service Details */}
-        <div className="mb-4 sm:mb-6 bg-gray-50 rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-gray-200">
-          <h4 className="text-sm sm:text-base font-semibold text-black mb-2 sm:mb-3">
-            Service Details
-          </h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm text-gray-700">
-            <div>
-              <div className="font-semibold">Carpet Area:</div>
-              <div className="text-sm sm:text-base font-medium">{carpetArea} sq.ft</div>
-            </div>
-            <div>
-              <div className="font-semibold">Applicable Services:</div>
-              <div>Electrical & Painting are per sq.ft</div>
-            </div>
-          </div>
-        </div>
+        
 
         {/* Navigation Buttons */}
         <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-0">

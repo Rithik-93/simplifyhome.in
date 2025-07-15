@@ -190,9 +190,11 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
             <span className="text-xs sm:text-sm font-medium text-gray-900 leading-tight block truncate">
               {item.name}
             </span>
-            <div className="text-xs text-gray-600 mt-0.5 sm:mt-1 truncate">
-              Area: {getItemArea(item, item.category)} sq.ft ({homeDetails.qualityTier})
-            </div>
+            {getItemArea(item, item.category) > 1 && (
+              <div className="text-xs text-gray-600 mt-0.5 sm:mt-1 truncate">
+                Area: {getItemArea(item, item.category)} sq.ft ({homeDetails.qualityTier})
+              </div>
+            )}
             <div className="text-xs text-yellow-600 font-medium">
               ₹{calculateItemPricePerSqFt(item, roomSizes[item.category]).toLocaleString()}/sq.ft
             </div>
@@ -351,9 +353,11 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
                 return (
                   <div key={item.id} className="bg-white rounded p-2 sm:p-3 border border-yellow-400 shadow-sm min-w-0 overflow-hidden">
                     <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">{item.name}</div>
-                    <div className="text-xs text-gray-600 truncate">
-                      Area: {itemArea} sq.ft ({homeDetails.qualityTier})
-                    </div>
+                    {itemArea > 1 && (
+                      <div className="text-xs text-gray-600 truncate">
+                        Area: {itemArea} sq.ft ({homeDetails.qualityTier})
+                      </div>
+                    )}
                     <div className="text-xs sm:text-sm font-medium text-gray-900 mt-1">
                       ₹{Math.round(totalPrice).toLocaleString()}
                     </div>

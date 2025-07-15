@@ -64,13 +64,28 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
       totalPrice += categoryTotal
     })
 
+    // Helper function to calculate service price (same logic as ServicesStep)
+    const calculateServicePrice = (service: any) => {
+      // If service has dynamic pricing, use it
+      if (service.pricing && appState.homeDetails.homeType && appState.homeDetails.qualityTier) {
+        const homeTypePrice = service.pricing[appState.homeDetails.homeType]
+        if (homeTypePrice && homeTypePrice[appState.homeDetails.qualityTier] !== undefined) {
+          return homeTypePrice[appState.homeDetails.qualityTier]
+        }
+      }
+      
+      // Otherwise, use the standard pricing
+      if (service.pricePerSqFt > 0) {
+        return service.basePrice + (service.pricePerSqFt * appState.homeDetails.carpetArea)
+      }
+      return service.basePrice
+    }
+
     // Add services to estimate
     const selectedServices = appState.serviceItems.filter(service => service.selected)
     if (selectedServices.length > 0) {
       const serviceItems = selectedServices.map(service => {
-        const price = service.pricePerSqFt > 0 
-          ? service.basePrice + (service.pricePerSqFt * appState.homeDetails.carpetArea)
-          : service.basePrice
+        const price = calculateServicePrice(service)
         return { name: service.name, price }
       })
       const servicesTotal = serviceItems.reduce((sum, item) => sum + item.price, 0)
