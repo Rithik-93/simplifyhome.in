@@ -8,6 +8,7 @@ import UserDetailsStep from './components/steps/UserDetailsStep'
 import EstimateStep from './components/steps/EstimateStep'
 import StepIndicator from './components/StepIndicator'
 import Header from './components/Header'
+import Disclaimer from './components/Disclaimer'
 
 function App() {
   const [appState, setAppState] = useState<AppState>({
@@ -100,6 +101,7 @@ function App() {
         <div className="mt-2 sm:mt-4 w-full max-w-full overflow-x-hidden">
           {renderCurrentStep()}
         </div>
+        <Disclaimer />
       </div>
     </div>
   )

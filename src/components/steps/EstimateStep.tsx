@@ -294,10 +294,10 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
             </p>
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center text-xs sm:text-sm">
               <div className="text-black">
-                <span className="font-semibold">Website:</span> simplifyhomes.in
+                <span className="font-semibold">Website:</span> simplifyhome.in
               </div>
               <div className="text-black">
-                <span className="font-semibold">Email:</span> info@simplifyhomes.in
+                <span className="font-semibold">Email:</span> info@simplifyhome.in
               </div>
             </div>
           </div>

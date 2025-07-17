@@ -22,8 +22,8 @@ const Header: React.FC<HeaderProps> = () => {
           </div>
           <div className="text-right flex-shrink-0">
             <p className="text-yellow-400 font-semibold text-xs sm:text-sm lg:text-sm">
-              <span className="hidden sm:inline">simplifyhomes.in</span>
-              <span className="sm:hidden">simplifyhomes</span>
+              <span className="hidden sm:inline">simplifyhome.in</span>
+              <span className="sm:hidden">simplifyhome</span>
             </p>
           </div>
         </div>
