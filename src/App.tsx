@@ -1,6 +1,8 @@
-import { useState } from 'react'
-import type { AppState, FurnitureItem, SingleLineItem, ServiceItem, UserDetails } from './types'
-import { DEFAULT_FURNITURE_ITEMS, DEFAULT_SINGLE_LINE_ITEMS, DEFAULT_SERVICE_ITEMS } from './types'
+import { useState, useCallback, useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import type { AppState, FurnitureItem, SingleLineItem, ServiceItem, UserDetails, CMSItem } from './types'
+// Remove hardcoded imports since we'll fetch from API
+// import { DEFAULT_FURNITURE_ITEMS, DEFAULT_SINGLE_LINE_ITEMS, DEFAULT_SERVICE_ITEMS } from './types'
 import HomeTypeStep from './components/steps/HomeTypeStep'
 import FurnitureStep from './components/steps/FurnitureStep'
 import ServicesStep from './components/steps/ServicesStep'
@@ -9,34 +11,118 @@ import EstimateStep from './components/steps/EstimateStep'
 import StepIndicator from './components/StepIndicator'
 import Header from './components/Header'
 import Disclaimer from './components/Disclaimer'
+import CMSApp from './components/cms/CMSApp'
+import { cmsApi } from './services/cmsApi'
 
-function App() {
+// Transform CMSItem to FurnitureItem
+const transformToFurnitureItem = (cmsItem: any): FurnitureItem => ({
+  id: cmsItem.id || cmsItem._id,
+  name: cmsItem.name,
+  category: cmsItem.category,
+  selected: false,
+  quantity: 1,
+  userPrice: 0 // User will enter price manually
+})
+
+// Transform CMSItem to SingleLineItem  
+const transformToSingleLineItem = (cmsItem: any): SingleLineItem => ({
+  id: cmsItem.id || cmsItem._id,
+  name: cmsItem.name,
+  selected: false,
+  userPrice: 0 // User will enter price manually
+})
+
+// Transform CMSItem to ServiceItem
+const transformToServiceItem = (cmsItem: any): ServiceItem => ({
+  id: cmsItem.id || cmsItem._id,
+  name: cmsItem.name,
+  selected: false,
+  userPrice: 0, // User will enter price manually
+  description: cmsItem.description || ''
+})
+
+function MainApp() {
   const [appState, setAppState] = useState<AppState>({
     currentStep: 1,
     homeDetails: { homeType: '', qualityTier: '', carpetArea: 0 },
-    furnitureItems: DEFAULT_FURNITURE_ITEMS,
-    singleLineItems: DEFAULT_SINGLE_LINE_ITEMS,
-    serviceItems: DEFAULT_SERVICE_ITEMS,
+    furnitureItems: [],
+    singleLineItems: [],
+    serviceItems: [],
     userDetails: { name: '', mobile: '', email: '', city: '' },
     estimate: [],
     finalPrice: 0
   })
 
-  const updateAppState = (updates: Partial<AppState>) => {
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch items from API on component mount
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+        
+        const [furnitureData, singleLineData, serviceData] = await Promise.all([
+          cmsApi.getActiveFurnitureItems(),
+          cmsApi.getActiveSingleLineItems(),
+          cmsApi.getActiveServiceItems()
+        ])
+
+        // Transform API data to frontend format
+        const furnitureItems = furnitureData.map(transformToFurnitureItem)
+        const singleLineItems = singleLineData.map(transformToSingleLineItem)
+        const serviceItems = serviceData.map(transformToServiceItem)
+
+        setAppState(prev => ({
+          ...prev,
+          furnitureItems,
+          singleLineItems,
+          serviceItems
+        }))
+      } catch (err) {
+        console.error('Error fetching items:', err)
+        setError('Failed to load items. Please refresh the page.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchItems()
+  }, [])
+
+  const updateAppState = useCallback((updates: Partial<AppState>) => {
     setAppState(prev => ({ ...prev, ...updates }))
-  }
+  }, [])
 
-  const nextStep = () => {
-    if (appState.currentStep < 5) {
-      setAppState(prev => ({ ...prev, currentStep: prev.currentStep + 1 }))
-    }
-  }
+  // Create stable update functions using useCallback
+  const updateFurnitureItems = useCallback((furnitureItems: FurnitureItem[]) => {
+    setAppState(prev => ({ ...prev, furnitureItems }))
+  }, [])
 
-  const prevStep = () => {
-    if (appState.currentStep > 1) {
-      setAppState(prev => ({ ...prev, currentStep: prev.currentStep - 1 }))
-    }
-  }
+  const updateSingleLineItems = useCallback((singleLineItems: SingleLineItem[]) => {
+    setAppState(prev => ({ ...prev, singleLineItems }))
+  }, [])
+
+  const updateServiceItems = useCallback((serviceItems: ServiceItem[]) => {
+    setAppState(prev => ({ ...prev, serviceItems }))
+  }, [])
+
+  const updateUserDetails = useCallback((userDetails: UserDetails) => {
+    setAppState(prev => ({ ...prev, userDetails }))
+  }, [])
+
+  const nextStep = useCallback(() => {
+    setAppState(prev => prev.currentStep < 5 ? { ...prev, currentStep: prev.currentStep + 1 } : prev)
+  }, [])
+
+  const prevStep = useCallback(() => {
+    setAppState(prev => prev.currentStep > 1 ? { ...prev, currentStep: prev.currentStep - 1 } : prev)
+  }, [])
+
+  const restartApp = useCallback(() => {
+    setAppState(prev => ({ ...prev, currentStep: 1 }))
+  }, [])
 
   const renderCurrentStep = () => {
     switch (appState.currentStep) {
@@ -54,8 +140,8 @@ function App() {
             furnitureItems={appState.furnitureItems}
             singleLineItems={appState.singleLineItems}
             homeDetails={appState.homeDetails}
-            onUpdateFurniture={(furnitureItems: FurnitureItem[]) => updateAppState({ furnitureItems })}
-            onUpdateSingleLine={(singleLineItems: SingleLineItem[]) => updateAppState({ singleLineItems })}
+            onUpdateFurniture={updateFurnitureItems}
+            onUpdateSingleLine={updateSingleLineItems}
             onNext={nextStep}
             onPrev={prevStep}
           />
@@ -66,7 +152,7 @@ function App() {
             serviceItems={appState.serviceItems}
             homeDetails={appState.homeDetails}
             carpetArea={appState.homeDetails.carpetArea}
-            onUpdate={(serviceItems: ServiceItem[]) => updateAppState({ serviceItems })}
+            onUpdate={updateServiceItems}
             onNext={nextStep}
             onPrev={prevStep}
           />
@@ -75,7 +161,7 @@ function App() {
         return (
           <UserDetailsStep
             userDetails={appState.userDetails}
-            onUpdate={(userDetails: UserDetails) => updateAppState({ userDetails })}
+            onUpdate={updateUserDetails}
             onNext={nextStep}
             onPrev={prevStep}
           />
@@ -85,7 +171,7 @@ function App() {
           <EstimateStep
             appState={appState}
             onPrev={prevStep}
-            onRestart={() => setAppState(prev => ({ ...prev, currentStep: 1 }))}
+            onRestart={restartApp}
           />
         )
       default:
@@ -99,11 +185,33 @@ function App() {
       <div className="w-full max-w-full mx-auto px-2 sm:px-4 py-2 sm:py-4 overflow-x-hidden">
         <StepIndicator currentStep={appState.currentStep} />
         <div className="mt-2 sm:mt-4 w-full max-w-full overflow-x-hidden">
-          {renderCurrentStep()}
+          {isLoading ? (
+            <div className="text-center py-8">
+              <p className="text-lg text-gray-600">Loading items...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-8 text-red-600">
+              <p>{error}</p>
+            </div>
+          ) : (
+            renderCurrentStep()
+          )}
         </div>
         <Disclaimer />
       </div>
     </div>
+  )
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<MainApp />} />
+        <Route path="/cms" element={<CMSApp />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   )
 }
 

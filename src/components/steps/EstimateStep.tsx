@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { RotateCcw } from 'lucide-react'
 import type { AppState, EstimateItem } from '../../types'
+import { ROOM_DIMENSIONS } from '../../types'
 
 interface EstimateStepProps {
   appState: AppState
@@ -27,10 +28,10 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
     // Add single line items to estimate
     const selectedSingleLineItems = appState.singleLineItems.filter(item => item.selected)
     if (selectedSingleLineItems.length > 0) {
-      const singleLineItemsFormatted = selectedSingleLineItems.map(item => ({
-        name: item.name,
-        price: item.totalPrice || 0
-      }))
+      const singleLineItemsFormatted = selectedSingleLineItems.map(item => {
+        const price = item.userPrice * appState.homeDetails.carpetArea
+        return { name: item.name, price }
+      })
       const singleLineTotal = singleLineItemsFormatted.reduce((sum, item) => sum + item.price, 0)
       newEstimate.push({
         category: 'Single Line Items',
@@ -40,15 +41,19 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
       totalPrice += singleLineTotal
     }
 
-    // Group furniture items by category
+    // Group furniture items by category using userPrice * roomArea * quantity
     const furnitureByCategory = appState.furnitureItems
       .filter(item => item.selected)
       .reduce((acc, item) => {
-        if (!acc[item.category]) {
-          acc[item.category] = []
-        }
-        // Use the totalPrice that was calculated in FurnitureStep
-        const price = item.totalPrice || 0
+        if (!acc[item.category]) acc[item.category] = []
+        
+        // Calculate room area (using default room size since user's selection isn't stored in AppState)
+        // TODO: Store user's room size selections in AppState for accurate estimates
+        const roomDimensions = ROOM_DIMENSIONS[item.category as keyof typeof ROOM_DIMENSIONS]
+        const defaultDimension = roomDimensions[0] // Use first option as default
+        const roomArea = defaultDimension.length * defaultDimension.width
+        
+        const price = item.userPrice * roomArea * item.quantity
         acc[item.category].push({ name: item.name, price })
         return acc
       }, {} as { [key: string]: { name: string; price: number }[] })
@@ -64,22 +69,8 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
       totalPrice += categoryTotal
     })
 
-    // Helper function to calculate service price (same logic as ServicesStep)
-    const calculateServicePrice = (service: any) => {
-      // If service has dynamic pricing, use it
-      if (service.pricing && appState.homeDetails.homeType && appState.homeDetails.qualityTier) {
-        const homeTypePrice = service.pricing[appState.homeDetails.homeType]
-        if (homeTypePrice && homeTypePrice[appState.homeDetails.qualityTier] !== undefined) {
-          return homeTypePrice[appState.homeDetails.qualityTier]
-        }
-      }
-      
-      // Otherwise, use the standard pricing
-      if (service.pricePerSqFt > 0) {
-        return service.basePrice + (service.pricePerSqFt * appState.homeDetails.carpetArea)
-      }
-      return service.basePrice
-    }
+    // Helper function to calculate service price
+    const calculateServicePrice = (service: any) => service.userPrice
 
     // Add services to estimate
     const selectedServices = appState.serviceItems.filter(service => service.selected)

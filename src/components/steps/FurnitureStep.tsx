@@ -1,7 +1,9 @@
 
-import { useState, useEffect } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import type { FurnitureItem, SingleLineItem, RoomSizeSelection, HomeDetails } from '../../types'
 import { ROOM_DIMENSIONS } from '../../types'
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
 
 interface FurnitureStepProps {
   furnitureItems: FurnitureItem[]
@@ -32,120 +34,78 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
     'Modular Kitchen': 0
   })
 
-  const calculateItemPricePerSqFt = (item: FurnitureItem, dimensionIndex: number) => {
+  // Calculate total price for furniture items based on user input (price per sqft * room area * quantity)
+  const calculateItemTotalPrice = useCallback((item: FurnitureItem) => {
     const roomDimensions = ROOM_DIMENSIONS[item.category as keyof typeof ROOM_DIMENSIONS]
-    const selectedDimension = roomDimensions[dimensionIndex]
-    const roomSizeKey = selectedDimension.label
-    const qualityTier = homeDetails.qualityTier.toLowerCase() as 'luxury' | 'premium'
-    
-    if (item.pricing[roomSizeKey]) {
-      return item.pricing[roomSizeKey].price[qualityTier] // Return price per sq ft only
-    }
-    return 0
-  }
+    const selectedDimension = roomDimensions[roomSizes[item.category]]
+    const roomArea = selectedDimension.length * selectedDimension.width
+    return item.userPrice * roomArea * item.quantity
+  }, [roomSizes])
 
-  const calculateItemTotalPrice = (item: FurnitureItem, dimensionIndex: number) => {
-    const roomDimensions = ROOM_DIMENSIONS[item.category as keyof typeof ROOM_DIMENSIONS]
-    const selectedDimension = roomDimensions[dimensionIndex]
-    const roomSizeKey = selectedDimension.label
-    const qualityTier = homeDetails.qualityTier.toLowerCase() as 'luxury' | 'premium'
-    
-    if (item.pricing[roomSizeKey]) {
-      const area = item.pricing[roomSizeKey].area[qualityTier]
-      const pricePerSqFt = item.pricing[roomSizeKey].price[qualityTier]
-      return area * pricePerSqFt // Total price = area × price per sq ft (for final calculation)
-    }
-    return 0
-  }
-
-  // Calculate initial prices for all items when component mounts
-  useEffect(() => {
-    // Only update if items don't already have totalPrice calculated
-    const needsUpdate = furnitureItems.some(item => item.totalPrice === undefined)
-    if (needsUpdate) {
-      const updatedItems = furnitureItems.map(item => ({
-        ...item,
-        totalPrice: calculateItemTotalPrice(item, roomSizes[item.category])
-      }))
-      onUpdateFurniture(updatedItems)
-    }
-  }, [homeDetails.qualityTier]) // Recalculate when quality tier changes
-
-  // Calculate single line item prices based on carpet area
-  useEffect(() => {
-    if (homeDetails.carpetArea > 0) {
-      const updatedSingleLineItems = singleLineItems.map(item => ({
-        ...item,
-        totalPrice: item.pricePerSqFt * homeDetails.carpetArea
-      }))
-      onUpdateSingleLine(updatedSingleLineItems)
-    }
+  // Calculate total price for single line items based on user input and carpet area
+  const calculateSingleLineTotalPrice = useCallback((item: SingleLineItem) => {
+    return item.userPrice * homeDetails.carpetArea
   }, [homeDetails.carpetArea])
 
-  const toggleFurnitureItem = (itemId: string) => {
-    // Capture current scroll position and target element
-    const scrollPosition = window.scrollY
-    const targetElement = document.getElementById(`item-${itemId}`)
-    const targetOffset = targetElement?.getBoundingClientRect().top || 0
-    
+  // Update furniture item price - using stable functions from parent
+  const updateFurniturePrice = useCallback((itemId: string, price: number) => {
+    const updatedItems = furnitureItems.map(item => 
+      item.id === itemId ? { ...item, userPrice: price } : item
+    )
+    onUpdateFurniture(updatedItems)
+  }, [furnitureItems, onUpdateFurniture])
+
+  // Update single line item price - using stable functions from parent
+  const updateSingleLinePrice = useCallback((itemId: string, price: number) => {
+    const updatedItems = singleLineItems.map(item => 
+      item.id === itemId ? { ...item, userPrice: price } : item
+    )
+    onUpdateSingleLine(updatedItems)
+  }, [singleLineItems, onUpdateSingleLine])
+
+  // Update furniture item quantity - using stable functions from parent
+  const updateFurnitureQuantity = useCallback((itemId: string, quantity: number) => {
+    const updatedItems = furnitureItems.map(item => 
+      item.id === itemId ? { ...item, quantity: Math.max(1, quantity) } : item
+    )
+    onUpdateFurniture(updatedItems)
+  }, [furnitureItems, onUpdateFurniture])
+
+  // Update both price and quantity in a single operation to avoid race condition
+  const updateFurniturePriceAndQuantity = useCallback((itemId: string, price: number, quantity: number) => {
+    const updatedItems = furnitureItems.map(item => {
+      if (item.id === itemId) {
+        return { ...item, userPrice: price, quantity: Math.max(1, quantity) }
+      }
+      return item
+    })
+    onUpdateFurniture(updatedItems)
+  }, [furnitureItems, onUpdateFurniture])
+
+  const toggleFurnitureItem = useCallback((itemId: string) => {
     const updatedItems = furnitureItems.map(item => 
       item.id === itemId ? { ...item, selected: !item.selected } : item
     )
     onUpdateFurniture(updatedItems)
-    
-    // Use requestAnimationFrame for better timing with DOM updates
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        // Calculate new scroll position to keep target element in same position
-        if (targetElement) {
-          const newTargetOffset = targetElement.getBoundingClientRect().top
-          const scrollDiff = newTargetOffset - targetOffset
-          window.scrollTo(0, scrollPosition + scrollDiff)
-        } else {
-          window.scrollTo(0, scrollPosition)
-        }
-      })
-    })
-  }
+  }, [furnitureItems, onUpdateFurniture])
 
-  const toggleSingleLineItem = (itemId: string) => {
+  const toggleSingleLineItem = useCallback((itemId: string) => {
     const updatedItems = singleLineItems.map(item => 
       item.id === itemId ? { ...item, selected: !item.selected } : item
     )
     onUpdateSingleLine(updatedItems)
-  }
+  }, [singleLineItems, onUpdateSingleLine])
 
-  const updateRoomSize = (category: string, dimensionIndex: number) => {
+  const updateRoomSize = useCallback((category: string, dimensionIndex: number) => {
     const newRoomSizes = { ...roomSizes, [category]: dimensionIndex }
     setRoomSizes(newRoomSizes)
-    
-    // Update all items in this category with new pricing
-    const updatedItems = furnitureItems.map(item => 
-      item.category === category ? { 
-        ...item, 
-        totalPrice: calculateItemTotalPrice(item, dimensionIndex)
-      } : item
-    )
-    onUpdateFurniture(updatedItems)
-  }
+  }, [roomSizes])
 
-  const getItemArea = (item: FurnitureItem, category: string) => {
+  const getRoomArea = useCallback((category: string) => {
     const roomDimensions = ROOM_DIMENSIONS[category as keyof typeof ROOM_DIMENSIONS]
     const selectedDimension = roomDimensions[roomSizes[category]]
-    const roomSizeKey = selectedDimension.label
-    const qualityTier = homeDetails.qualityTier.toLowerCase() as 'luxury' | 'premium'
-    
-    if (item.pricing[roomSizeKey]) {
-      return item.pricing[roomSizeKey].area[qualityTier]
-    }
-    return 0
-  }
-
-  // const getRoomArea = (category: string) => {
-  //   const roomDimensions = ROOM_DIMENSIONS[category as keyof typeof ROOM_DIMENSIONS]
-  //   const selectedDimension = roomDimensions[roomSizes[category]]
-  //   return selectedDimension.length * selectedDimension.width
-  // }
+    return selectedDimension.length * selectedDimension.width
+  }, [roomSizes])
 
   // Filter categories based on home type
   const categories = [
@@ -157,91 +117,225 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
     'Modular Kitchen'
   ]
 
-  const getItemsByCategory = (category: string) => {
+  const getItemsByCategory = useCallback((category: string) => {
     return furnitureItems.filter(item => item.category === category)
-  }
+  }, [furnitureItems])
 
   const hasSelectedItems = furnitureItems.some(item => item.selected) || singleLineItems.some(item => item.selected)
 
-  const FurnitureItemCard = ({ item }: { item: FurnitureItem }) => (
-    <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-300 hover:border-yellow-400 transition-all duration-200 hover:shadow-sm w-full max-w-full min-w-0 overflow-hidden">
-      <div className="flex items-start justify-between mb-1 sm:mb-2">
-        <label className="flex items-start cursor-pointer flex-1 min-w-0">
-          <div className="relative mt-1 flex-shrink-0">
-            <input
-              type="checkbox"
-              checked={item.selected}
-              onChange={() => toggleFurnitureItem(item.id)}
-              className="sr-only"
-            />
-            <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
-              item.selected 
-                ? 'bg-yellow-400 border-yellow-400' 
-                : 'bg-white border-gray-300 hover:border-yellow-400'
-            }`}>
-              {item.selected && (
-                <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-black" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              )}
-            </div>
+  const FurnitureItemCard = ({ item }: { item: FurnitureItem }) => {
+    const [localPrice, setLocalPrice] = useState(item.userPrice.toString())
+    const [localQty, setLocalQty] = useState(item.quantity.toString())
+    const [showInputPanel, setShowInputPanel] = useState(false)
+  
+    useEffect(() => {
+      setLocalPrice(item.userPrice.toString())
+      setLocalQty(item.quantity.toString())
+    }, [item.userPrice, item.quantity])
+  
+          const commitPrice = () => {
+        const price = Number.parseFloat(localPrice) || 0
+        updateFurniturePrice(item.id, price)
+      }
+  
+    const commitQty = () => {
+      const qty = Math.max(1, Number.parseInt(localQty) || 1)
+      updateFurnitureQuantity(item.id, qty)
+    }
+  
+          const handleSave = () => {
+        const price = Number.parseFloat(localPrice) || 0
+        const qty = Math.max(1, Number.parseInt(localQty) || 1)
+        
+        // Update both price and quantity in a single operation to avoid race condition
+        updateFurniturePriceAndQuantity(item.id, price, qty)
+        setShowInputPanel(false)
+      }
+  
+          const getButtonText = () => {
+        if (item.userPrice > 0 && item.quantity > 0) {
+          return `₹${item.userPrice}/sq.ft × ${item.quantity}`
+        }
+        if (item.userPrice > 0) {
+          return `₹${item.userPrice}/sq.ft`
+        }
+        return "Set Price & Qty"
+      }
+  
+          return (
+        <div 
+          id={`item-${item.id}`} 
+          className="bg-white rounded-lg p-2 border border-gray-300 hover:border-yellow-400 transition-all duration-200 hover:shadow-sm w-full max-w-full min-w-0 relative"
+        >
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={item.selected}
+            onChange={() => toggleFurnitureItem(item.id)}
+            className="w-4 h-4 text-yellow-400 hover:cursor-pointer bg-gray-100 border-gray-300 rounded flex-shrink-0"
+            data-item-id={item.id}
+            data-item-name={item.name}
+            data-item-category={item.category}
+          />
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium text-gray-900 truncate">{item.name}</div>
+            <div className="text-xs text-gray-600 truncate">{getRoomArea(item.category).toFixed(0)} sq.ft</div>
           </div>
-          <div className="ml-2 sm:ml-3 flex-1 min-w-0">
-            <span className="text-xs sm:text-sm font-medium text-gray-900 leading-tight block truncate">
-              {item.name}
-            </span>
-            {getItemArea(item, item.category) > 1 && (
-              <div className="text-xs text-gray-600 mt-0.5 sm:mt-1 truncate">
-                Area: {getItemArea(item, item.category)} sq.ft ({homeDetails.qualityTier})
-              </div>
-            )}
-            <div className="text-xs text-yellow-600 font-medium">
-              ₹{calculateItemPricePerSqFt(item, roomSizes[item.category]).toLocaleString()}/sq.ft
+  
+          {item.selected && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowInputPanel(!showInputPanel)}
+                className="h-7 px-2 text-xs border-yellow-200 hover:border-yellow-300 hover:bg-yellow-50"
+              >
+                {getButtonText()}
+              </Button>
             </div>
-          </div>
-        </label>
-      </div>
-    </div>
-  )
+          )}
+        </div>
+  
+                 {showInputPanel && item.selected && (
+           <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-56">
+             <div className="space-y-3">
+               <div>
+                 <label className="text-xs font-medium text-gray-700 block mb-1">Price per sq.ft</label>
+                 <Input
+                   type="number"
+                   value={localPrice}
+                   onChange={(e) => setLocalPrice(e.target.value)}
+                   className="h-8 text-sm"
+                   placeholder="Enter price per sq.ft"
+                   min="0"
+                   autoFocus
+                   onKeyDown={(e) => {
+                     if (e.key === "Enter") handleSave()
+                     if (e.key === "Escape") setShowInputPanel(false)
+                   }}
+                 />
+               </div>
 
-  const SingleLineItemCard = ({ item }: { item: SingleLineItem }) => (
-    <div className="bg-white rounded-lg p-2 sm:p-3 border border-gray-300 hover:border-yellow-400 transition-all duration-200 hover:shadow-sm w-full max-w-full min-w-0 overflow-hidden">
-      <div className="flex items-start justify-between mb-1 sm:mb-2">
-        <label className="flex items-start cursor-pointer flex-1 min-w-0">
-          <div className="relative mt-1 flex-shrink-0">
-            <input
-              type="checkbox"
-              checked={item.selected}
-              onChange={() => toggleSingleLineItem(item.id)}
-              className="sr-only"
-            />
-            <div className={`w-4 h-4 sm:w-5 sm:h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${
-              item.selected 
-                ? 'bg-yellow-400 border-yellow-400' 
-                : 'bg-white border-gray-300 hover:border-yellow-400'
-            }`}>
-              {item.selected && (
-                <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-black" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              )}
-            </div>
+               <div>
+                 <label className="text-xs font-medium text-gray-700 block mb-1">Quantity</label>
+                 <Input
+                   type="number"
+                   value={localQty}
+                   onChange={(e) => setLocalQty(e.target.value)}
+                   className="h-8 text-sm"
+                   placeholder="Qty"
+                   min="1"
+                   onKeyDown={(e) => {
+                     if (e.key === "Enter") handleSave()
+                     if (e.key === "Escape") setShowInputPanel(false)
+                   }}
+                 />
+               </div>
+               
+               <div className="text-xs text-gray-600">
+                 Room area: {getRoomArea(item.category).toFixed(0)} sq.ft
+               </div>
+
+               <div className="flex gap-2 pt-1">
+                 <Button size="sm" onClick={handleSave} className="h-7 px-3 bg-yellow-500 hover:bg-yellow-600 text-white">
+                   Save
+                 </Button>
+                 <Button size="sm" variant="outline" onClick={() => setShowInputPanel(false)} className="h-7 px-3">
+                   Cancel
+                 </Button>
+               </div>
+             </div>
+           </div>
+         )}
+  
+        {item.selected && item.userPrice > 0 && (
+          <div className="mt-1 text-xs text-yellow-600 font-medium text-right">
+            ₹{calculateItemTotalPrice(item).toLocaleString()}
           </div>
-          <div className="ml-2 sm:ml-3 flex-1 min-w-0">
-            <span className="text-xs sm:text-sm font-medium text-gray-900 leading-tight block truncate">
-              {item.name}
-            </span>
-            <div className="text-xs text-gray-600 mt-0.5 sm:mt-1 truncate">
-              Rate: ₹{item.pricePerSqFt}/sq.ft × {homeDetails.carpetArea} sq.ft
-            </div>
-            <div className="text-xs text-yellow-600 font-medium">
-              ₹{(item.totalPrice || 0).toLocaleString()}
-            </div>
-          </div>
-        </label>
+        )}
       </div>
-    </div>
-  )
+    )
+  }
+
+  const SingleLineItemCard3 = ({ item }: { item: SingleLineItem }) => {
+    const [localPrice, setLocalPrice] = useState(item.userPrice.toString())
+    const [showPriceInput, setShowPriceInput] = useState(false)
+  
+    useEffect(() => {
+      setLocalPrice(item.userPrice.toString())
+    }, [item.userPrice])
+  
+    const commitPrice = () => {
+      const price = Number.parseFloat(localPrice) || 0
+      updateSingleLinePrice(item.id, price)
+      setShowPriceInput(false)
+    }
+  
+    return (
+      <div className="bg-white rounded-lg p-3 border border-gray-200 hover:shadow-md transition-all duration-200 relative">
+        <div className="flex items-center gap-3">
+          <input
+            type="checkbox"
+            checked={item.selected}
+            onChange={() => toggleSingleLineItem(item.id)}
+            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+          />
+  
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium text-gray-900 truncate">{item.name}</div>
+            <div className="text-xs text-gray-500 truncate">× {homeDetails.carpetArea.toLocaleString()} sq.ft</div>
+          </div>
+  
+          {item.selected && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPriceInput(!showPriceInput)}
+                className="h-8 px-3 text-xs"
+              >
+                {item.userPrice > 0 ? `₹${item.userPrice}` : "Set Price"}
+              </Button>
+            </div>
+          )}
+        </div>
+  
+                 {showPriceInput && item.selected && (
+           <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-48">
+             <div className="space-y-2">
+               <label className="text-xs font-medium text-gray-700">Price per sq.ft</label>
+               <div className="flex gap-2">
+                 <Input
+                   type="number"
+                   value={localPrice}
+                   onChange={(e) => setLocalPrice(e.target.value)}
+                   className="h-8 text-sm"
+                   placeholder="Enter price"
+                   autoFocus
+                   onKeyDown={(e) => {
+                     if (e.key === "Enter") commitPrice()
+                     if (e.key === "Escape") setShowPriceInput(false)
+                   }}
+                 />
+                 <Button size="sm" onClick={commitPrice} className="h-8 px-3">
+                   Save
+                 </Button>
+               </div>
+             </div>
+           </div>
+         )}
+  
+        {item.selected && item.userPrice > 0 && (
+          <div className="mt-2 pt-2 border-t border-gray-100">
+            <div className="text-xs text-right">
+              <span className="text-gray-500">Total: </span>
+              <span className="font-semibold text-blue-600">₹{calculateSingleLineTotalPrice(item).toLocaleString()}</span>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   const CategoryColumn = ({ category }: { category: string }) => {
     const categoryItems = getItemsByCategory(category)
@@ -249,20 +343,18 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
     const selectedDimension = roomDimensions[roomSizes[category]]
     
     return (
-      <div className="bg-gray-50 rounded-lg p-3 sm:p-4 h-fit w-full max-w-full min-w-0 overflow-hidden">
-        <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 mb-2 sm:mb-3 text-center truncate">
+      <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-semibold text-gray-900 truncate">
           {category}
         </h3>
         
         {/* Room Size Selector */}
-        <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-white rounded-lg border border-yellow-300 w-full max-w-full min-w-0">
-          <label className="block text-xs sm:text-sm font-semibold text-gray-900 mb-1 sm:mb-2">
-            Room Size
-          </label>
+          <div className="flex items-center gap-1">
           <select
             value={roomSizes[category]}
             onChange={(e) => updateRoomSize(category, parseInt(e.target.value))}
-            className="w-full max-w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 text-xs sm:text-sm"
+              className="px-1 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-yellow-400 focus:border-yellow-400 text-xs"
           >
             {roomDimensions.map((option, index) => (
               <option key={index} value={index}>
@@ -270,14 +362,15 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
               </option>
             ))}
           </select>
-          <div className="text-xs text-gray-600 mt-1 truncate">
-            Area: {(selectedDimension.length * selectedDimension.width).toFixed(0)} sq.ft
+            <span className="text-xs text-gray-600">
+              {(selectedDimension.length * selectedDimension.width).toFixed(0)} sq.ft
+            </span>
           </div>
         </div>
         
-        <div className="space-y-2 sm:space-y-3 w-full max-w-full min-w-0">
+        <div className="space-y-1">
           {categoryItems.map((item) => (
-            <FurnitureItemCard key={item.id} item={item} />
+            <FurnitureItemCard key={`${item.category}-${item.id}`} item={item} />
           ))}
         </div>
       </div>
@@ -292,35 +385,35 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
             Select Furniture Items
           </h2>
           <p className="text-sm sm:text-base text-gray-600">
-            Choose the furniture items you want and specify their dimensions
+            Choose the furniture items you want and enter their prices
           </p>
         </div>
 
         {/* Single Line Items Section */}
-        <div className="mb-6 sm:mb-8">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center">
+        <div className="mb-4">
+          <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center">
             <span className="bg-yellow-400 text-black px-2 py-1 rounded-md text-sm mr-2">1</span>
             Single Line Items
           </h3>
-          <div className="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200">
-            <p className="text-xs sm:text-sm text-gray-600 mb-3">
+          <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
+            <p className="text-xs text-gray-600 mb-2">
               These items are calculated based on your carpet area of {homeDetails.carpetArea} sq.ft
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {singleLineItems.map((item) => (
-                <SingleLineItemCard key={item.id} item={item} />
+                <SingleLineItemCard3 key={item.id} item={item} />
               ))}
             </div>
           </div>
         </div>
 
         {/* Wood Work Section */}
-        <div className="mb-4 sm:mb-6">
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 flex items-center">
+        <div className="mb-4">
+          <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center">
             <span className="bg-yellow-400 text-black px-2 py-1 rounded-md text-sm mr-2">2</span>
             Wood Work
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 w-full max-w-full overflow-x-hidden">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 w-full max-w-full overflow-x-hidden">
             {categories.map((category) => (
               <CategoryColumn key={category} category={category} />
             ))}
@@ -339,25 +432,25 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
                 <div key={item.id} className="bg-white rounded p-2 sm:p-3 border border-yellow-400 shadow-sm min-w-0 overflow-hidden">
                   <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">{item.name}</div>
                   <div className="text-xs text-gray-600 truncate">
-                    Rate: ₹{item.pricePerSqFt}/sq.ft × {homeDetails.carpetArea} sq.ft
+                    Rate: ₹{item.userPrice}/sq.ft × {homeDetails.carpetArea} sq.ft
                   </div>
                   <div className="text-xs sm:text-sm font-medium text-gray-900 mt-1">
-                    ₹{Math.round(item.totalPrice || 0).toLocaleString()}
+                    ₹{Math.round(calculateSingleLineTotalPrice(item)).toLocaleString()}
                   </div>
                 </div>
               ))}
               {/* Furniture Items */}
               {furnitureItems.filter(item => item.selected).map((item) => {
-                const itemArea = getItemArea(item, item.category)
-                const totalPrice = calculateItemTotalPrice(item, roomSizes[item.category])
+                const totalPrice = calculateItemTotalPrice(item)
+                const roomDimensions = ROOM_DIMENSIONS[item.category as keyof typeof ROOM_DIMENSIONS]
+                const selectedDimension = roomDimensions[roomSizes[item.category]]
+                const roomArea = selectedDimension.length * selectedDimension.width
                 return (
                   <div key={item.id} className="bg-white rounded p-2 sm:p-3 border border-yellow-400 shadow-sm min-w-0 overflow-hidden">
                     <div className="text-xs sm:text-sm font-medium text-gray-900 truncate">{item.name}</div>
-                    {itemArea > 1 && (
                       <div className="text-xs text-gray-600 truncate">
-                        Area: {itemArea} sq.ft ({homeDetails.qualityTier})
+                      ₹{item.userPrice}/sq.ft × {roomArea.toFixed(0)} sq.ft × {item.quantity} qty
                       </div>
-                    )}
                     <div className="text-xs sm:text-sm font-medium text-gray-900 mt-1">
                       ₹{Math.round(totalPrice).toLocaleString()}
                     </div>
@@ -394,4 +487,4 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
   )
 }
 
-export default FurnitureStep 
+export default FurnitureStep

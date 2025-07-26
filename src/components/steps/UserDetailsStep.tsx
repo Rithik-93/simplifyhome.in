@@ -218,7 +218,7 @@ const UserDetailsStep: React.FC<UserDetailsStepProps> = ({
     <div className="w-full max-w-full mx-auto px-2 sm:px-4 overflow-x-hidden">
       <div className="bg-white rounded-lg sm:rounded-xl shadow-lg sm:shadow-xl p-3 sm:p-6 border-2 border-yellow-400 max-w-2xl mx-auto w-full overflow-x-hidden">
         <div className="text-center mb-4 sm:mb-6">
-          <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-black mb-2 sm:mb-3">
+          <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-black mb-2 sm:mb-3">
             Share Your Details
           </h2>
           <p className="text-sm sm:text-base text-gray-700">
@@ -229,7 +229,7 @@ const UserDetailsStep: React.FC<UserDetailsStepProps> = ({
         <div className="space-y-3 sm:space-y-4">
           {/* Name Field */}
           <div>
-            <label className="block text-sm sm:text-base font-bold text-black mb-1 sm:mb-2">
+            <label className="block text-sm sm:text-base font-semibold text-black mb-1 sm:mb-2">
               Your Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -248,7 +248,7 @@ const UserDetailsStep: React.FC<UserDetailsStepProps> = ({
 
           {/* Mobile Field with OTP Verification */}
           <div>
-            <label className="block text-sm sm:text-base font-bold text-black mb-1 sm:mb-2">
+            <label className="block text-sm sm:text-base font-semibold text-black mb-1 sm:mb-2">
               Your Mobile <span className="text-red-500">*</span>
               {otpState.verified && (
                 <span className="ml-2 text-green-600 text-sm font-medium flex items-center">
@@ -275,7 +275,7 @@ const UserDetailsStep: React.FC<UserDetailsStepProps> = ({
                 <button
                   onClick={sendOTP}
                   disabled={!userDetails.mobile || otpState.loading || otpState.sent}
-                  className={`px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-bold rounded-lg transition-all duration-200 min-h-[44px] flex items-center ${
+                  className={`px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 min-h-[44px] flex items-center ${
                     !userDetails.mobile || otpState.loading
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : otpState.sent
@@ -301,7 +301,7 @@ const UserDetailsStep: React.FC<UserDetailsStepProps> = ({
           {/* OTP Input Field */}
           {otpState.sent && !otpState.verified && (
             <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-3 sm:p-4">
-              <label className="block text-sm sm:text-base font-bold text-black mb-2">
+              <label className="block text-sm sm:text-base font-semibold text-black mb-2">
                 Enter OTP <span className="text-red-500">*</span>
               </label>
               <div className="flex gap-2">
@@ -316,7 +316,7 @@ const UserDetailsStep: React.FC<UserDetailsStepProps> = ({
                 <button
                   onClick={verifyOTP}
                   disabled={!otpState.otp || otpState.otp.length !== 6 || otpState.loading}
-                  className={`px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-bold rounded-lg transition-all duration-200 min-h-[44px] flex items-center ${
+                  className={`px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-semibold rounded-lg transition-all duration-200 min-h-[44px] flex items-center ${
                     !otpState.otp || otpState.otp.length !== 6 || otpState.loading
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                       : 'bg-black text-yellow-400 hover:bg-gray-800'
@@ -354,7 +354,7 @@ const UserDetailsStep: React.FC<UserDetailsStepProps> = ({
 
           {/* Email Field */}
           <div>
-            <label className="block text-sm sm:text-base font-bold text-black mb-1 sm:mb-2">
+            <label className="block text-sm sm:text-base font-semibold text-black mb-1 sm:mb-2">
               Your Email <span className="text-red-500">*</span>
             </label>
             <input
@@ -373,7 +373,7 @@ const UserDetailsStep: React.FC<UserDetailsStepProps> = ({
 
           {/* City Field */}
           <div>
-            <label className="block text-sm sm:text-base font-bold text-black mb-1 sm:mb-2">
+            <label className="block text-sm sm:text-base font-semibold text-black mb-1 sm:mb-2">
               Your City <span className="text-red-500">*</span>
             </label>
             <input
@@ -398,7 +398,7 @@ const UserDetailsStep: React.FC<UserDetailsStepProps> = ({
               <Lock size={20} className="sm:w-6 sm:h-6 text-yellow-600" />
             </div>
             <div>
-              <h4 className="text-sm sm:text-base font-bold text-black mb-1 sm:mb-2">
+              <h4 className="text-sm sm:text-base font-semibold text-black mb-1 sm:mb-2">
                 Privacy Assurance
               </h4>
               <p className="text-xs sm:text-sm text-gray-700 leading-tight">
@@ -410,7 +410,7 @@ const UserDetailsStep: React.FC<UserDetailsStepProps> = ({
 
         {/* Benefits Section */}
         <div className="mt-3 sm:mt-4 bg-black rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-yellow-400">
-          <h4 className="text-sm sm:text-base font-bold text-yellow-400 mb-2 sm:mb-3">
+          <h4 className="text-sm sm:text-base font-semibold text-yellow-400 mb-2 sm:mb-3">
             What you'll get:
           </h4>
           <ul className="text-xs sm:text-sm text-yellow-100 space-y-1 sm:space-y-2">
@@ -437,14 +437,14 @@ const UserDetailsStep: React.FC<UserDetailsStepProps> = ({
         <div className="flex flex-col sm:flex-row justify-between mt-4 sm:mt-6 gap-3 sm:gap-0">
           <button
             onClick={onPrev}
-            className="order-2 sm:order-1 px-4 sm:px-6 py-3 text-sm sm:text-base font-bold rounded-lg sm:rounded-xl border-2 border-black text-black hover:bg-black hover:text-yellow-400 transition-all duration-300 transform hover:-translate-y-1 min-h-[44px]"
+            className="order-2 sm:order-1 px-4 sm:px-6 py-3 text-sm sm:text-base font-semibold rounded-lg sm:rounded-xl border-2 border-black text-black hover:bg-black hover:text-yellow-400 transition-all duration-300 transform hover:-translate-y-1 min-h-[44px]"
           >
             ← Previous
           </button>
           <button
             onClick={handleSubmit}
             disabled={!isValid}
-            className={`order-1 sm:order-2 px-6 sm:px-8 py-3 text-sm sm:text-base font-bold rounded-lg sm:rounded-xl transition-all duration-300 transform min-h-[44px] ${
+            className={`order-1 sm:order-2 px-6 sm:px-8 py-3 text-sm sm:text-base font-semibold rounded-lg sm:rounded-xl transition-all duration-300 transform min-h-[44px] ${
               isValid
                 ? 'bg-black text-yellow-400 hover:bg-gray-800 hover:shadow-xl hover:-translate-y-1'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
