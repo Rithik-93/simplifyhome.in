@@ -13,14 +13,13 @@ interface ServicesStepProps {
 const ServicesStep: React.FC<ServicesStepProps> = ({ 
   serviceItems, 
   homeDetails,
-  carpetArea, 
   onUpdate, 
   onNext, 
   onPrev 
 }) => {
   // Filter services based on quality tier
   const getFilteredServices = useCallback(() => {
-    return serviceItems.filter(service => {
+    return serviceItems.filter(() => {
       // Always show all services
       return true
     })

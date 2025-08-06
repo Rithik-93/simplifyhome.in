@@ -4,9 +4,9 @@ import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Select } from '../ui/select'
 import { Textarea } from '../ui/textarea'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Badge } from '../ui/badge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
+
 import type { CMSCategory } from '../../types'
 
 const CategoriesPage: React.FC = () => {
@@ -26,35 +26,45 @@ const CategoriesPage: React.FC = () => {
       name: 'Master Bedroom',
       type: 'furniture',
       description: 'Furniture items for master bedroom',
-      isActive: true
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     },
     {
       id: '2',
       name: 'Kitchen',
       type: 'furniture',
       description: 'Modular kitchen and kitchen accessories',
-      isActive: true
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     },
     {
       id: '3',
       name: 'Services',
       type: 'singleLine',
       description: 'Installation and service items',
-      isActive: true
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     },
     {
       id: '4',
       name: 'Living Room',
       type: 'service',
       description: 'Living room furniture and accessories',
-      isActive: true
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     },
     {
       id: '5',
       name: 'Children Bedroom',
       type: 'furniture',
       description: 'Furniture for children\'s bedroom',
-      isActive: false
+      isActive: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     }
   ])
 
@@ -64,7 +74,9 @@ const CategoriesPage: React.FC = () => {
       name: formData.name,
       type: formData.type,
       description: formData.description,
-      isActive: formData.isActive
+      isActive: formData.isActive,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     }
     setCategories(prev => [newCategory, ...prev])
     setShowForm(false)
@@ -75,7 +87,7 @@ const CategoriesPage: React.FC = () => {
     if (editingCategory) {
       setCategories(prev => prev.map(cat => 
         cat.id === editingCategory.id 
-          ? { ...formData, id: cat.id }
+          ? { ...formData, id: cat.id, createdAt: cat.createdAt, updatedAt: new Date().toISOString() }
           : cat
       ))
       setEditingCategory(null)

@@ -70,14 +70,6 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
     return item.userPrice * homeDetails.carpetArea
   }, [homeDetails.carpetArea])
 
-  // Update furniture item price - using stable functions from parent
-  const updateFurniturePrice = useCallback((itemId: string, price: number) => {
-    const updatedItems = furnitureItems.map(item => 
-      item.id === itemId ? { ...item, userPrice: price } : item
-    )
-    onUpdateFurniture(updatedItems)
-  }, [furnitureItems, onUpdateFurniture])
-
   // Update single line item price - using stable functions from parent
   const updateSingleLinePrice = useCallback((itemId: string, price: number) => {
     const updatedItems = singleLineItems.map(item => 
@@ -85,14 +77,6 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
     )
     onUpdateSingleLine(updatedItems)
   }, [singleLineItems, onUpdateSingleLine])
-
-  // Update furniture item quantity - using stable functions from parent
-  const updateFurnitureQuantity = useCallback((itemId: string, quantity: number) => {
-    const updatedItems = furnitureItems.map(item => 
-      item.id === itemId ? { ...item, quantity: Math.max(1, quantity) } : item
-    )
-    onUpdateFurniture(updatedItems)
-  }, [furnitureItems, onUpdateFurniture])
 
   // Update both price and quantity in a single operation to avoid race condition
   const updateFurniturePriceAndQuantity = useCallback((itemId: string, price: number, quantity: number) => {

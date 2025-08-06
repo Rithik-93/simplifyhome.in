@@ -95,6 +95,29 @@ export interface UpdateCategoryRequest extends Partial<CreateCategoryRequest> {
   id: string;
 }
 
+// User management types
+export interface CMSUser {
+  id: string;
+  username: string;
+  email: string;
+  role: 'admin' | 'editor' | 'viewer';
+  isActive: boolean;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+}
+
+export interface CreateUserRequest {
+  username: string;
+  email: string;
+  password: string;
+  role?: 'admin' | 'editor' | 'viewer';
+  isActive?: boolean;
+}
+
+export interface UpdateUserRequest extends Partial<CreateUserRequest> {
+  id: string;
+}
+
 export interface GetItemsRequest {
   page?: number;
   limit?: number;

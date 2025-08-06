@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import type { AppState, FurnitureItem, SingleLineItem, ServiceItem, UserDetails, CMSItem } from './types'
+import type { AppState, FurnitureItem, SingleLineItem, ServiceItem, UserDetails } from './types'
 // Remove hardcoded imports since we'll fetch from API
 // import { DEFAULT_FURNITURE_ITEMS, DEFAULT_SINGLE_LINE_ITEMS, DEFAULT_SERVICE_ITEMS } from './types'
 import HomeTypeStep from './components/steps/HomeTypeStep'
