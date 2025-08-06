@@ -1,4 +1,4 @@
-import type { CMSItem, CMSCategory, AdminUser, CMSResponse, CMSPagination } from '../types'
+import type { CMSItem, CMSCategory, CMSResponse, CMSPagination } from '../types'
 
 // Base API configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 
@@ -112,42 +112,6 @@ export const categoriesAPI = {
   }
 }
 
-// Users API
-export const usersAPI = {
-  // Get all users
-  getUsers: async (): Promise<CMSResponse<AdminUser[]>> => {
-    return apiRequest<AdminUser[]>('/users')
-  },
-
-  // Get single user by ID
-  getUser: async (id: string): Promise<CMSResponse<AdminUser>> => {
-    return apiRequest<AdminUser>(`/users/${id}`)
-  },
-
-  // Create new user
-  createUser: async (user: Omit<AdminUser, 'id' | 'createdAt'> & { password: string }): Promise<CMSResponse<AdminUser>> => {
-    return apiRequest<AdminUser>('/users', {
-      method: 'POST',
-      body: JSON.stringify(user),
-    })
-  },
-
-  // Update user
-  updateUser: async (id: string, user: Partial<AdminUser>): Promise<CMSResponse<AdminUser>> => {
-    return apiRequest<AdminUser>(`/users/${id}`, {
-      method: 'PUT',
-      body: JSON.stringify(user),
-    })
-  },
-
-  // Delete user
-  deleteUser: async (id: string): Promise<CMSResponse<void>> => {
-    return apiRequest<void>(`/users/${id}`, {
-      method: 'DELETE',
-    })
-  }
-}
-
 // Dashboard API
 export const dashboardAPI = {
   // Get dashboard statistics
@@ -161,33 +125,10 @@ export const dashboardAPI = {
   }
 }
 
-// Authentication API
-export const authAPI = {
-  // Login
-  login: async (credentials: { username: string; password: string }): Promise<CMSResponse<{ token: string; user: AdminUser }>> => {
-    return apiRequest<{ token: string; user: AdminUser }>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify(credentials),
-    })
-  },
 
-  // Logout
-  logout: async (): Promise<CMSResponse<void>> => {
-    return apiRequest<void>('/auth/logout', {
-      method: 'POST',
-    })
-  },
-
-  // Get current user
-  getCurrentUser: async (): Promise<CMSResponse<AdminUser>> => {
-    return apiRequest<AdminUser>('/auth/me')
-  }
-}
 
 export default {
   items: itemsAPI,
   categories: categoriesAPI,
-  users: usersAPI,
   dashboard: dashboardAPI,
-  auth: authAPI,
 } 

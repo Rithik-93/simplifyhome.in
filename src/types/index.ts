@@ -48,14 +48,6 @@ export interface UserDetails {
 }
 
 // CMS Types
-export interface AdminUser {
-  id: string;
-  username: string;
-  email: string;
-  role: 'admin' | 'editor';
-  createdAt: Date;
-}
-
 export interface CMSItem {
   id: string;
   name: string;
@@ -73,16 +65,6 @@ export interface CMSCategory {
   name: string;
   type: 'furniture' | 'singleLine' | 'service';
   description?: string;
-  isActive: boolean;
-  createdAt: string | Date;
-  updatedAt: string | Date;
-}
-
-export interface CMSUser {
-  id: string;
-  username: string;
-  email: string;
-  role: 'admin' | 'editor';
   isActive: boolean;
   createdAt: string | Date;
   updatedAt: string | Date;
@@ -110,17 +92,6 @@ export interface CreateCategoryRequest {
 }
 
 export interface UpdateCategoryRequest extends Partial<CreateCategoryRequest> {
-  id: string;
-}
-
-export interface CreateUserRequest {
-  username: string;
-  email: string;
-  password: string;
-  role?: 'admin' | 'editor';
-}
-
-export interface UpdateUserRequest extends Partial<CreateUserRequest> {
   id: string;
 }
 
@@ -152,8 +123,6 @@ export interface DashboardStats {
   activeItems: number;
   totalCategories: number;
   activeCategories: number;
-  totalUsers: number;
-  activeUsers: number;
   itemsByType: {
     furniture: number;
     singleLine: number;
@@ -219,6 +188,13 @@ const GUEST_BEDROOM_DIMENSIONS: DimensionOption[] = [
   { length: 11, width: 11, label: '11 × 11 ft' }
 ];
 
+// Default dimensions for unknown categories
+const DEFAULT_ROOM_DIMENSIONS: DimensionOption[] = [
+  { length: 10, width: 10, label: '10 × 10 ft' },
+  { length: 10, width: 12, label: '10 × 12 ft' },
+  { length: 12, width: 12, label: '12 × 12 ft' }
+];
+
 export const ROOM_DIMENSIONS = {
   'Master Bedroom': BEDROOM_DIMENSIONS,
   'Children Bedroom': BEDROOM_DIMENSIONS, 
@@ -226,6 +202,11 @@ export const ROOM_DIMENSIONS = {
   'Living Room': LIVING_ROOM_DIMENSIONS,
   'Pooja Room': POOJA_ROOM_DIMENSIONS,
   'Modular Kitchen': KITCHEN_DIMENSIONS
+};
+
+// Helper function to get room dimensions with fallback
+export const getRoomDimensions = (category: string): DimensionOption[] => {
+  return ROOM_DIMENSIONS[category as keyof typeof ROOM_DIMENSIONS] || DEFAULT_ROOM_DIMENSIONS;
 };
 
 export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
@@ -433,31 +414,38 @@ export const DEFAULT_SINGLE_LINE_ITEMS: SingleLineItem[] = [
 
 export const DEFAULT_SERVICE_ITEMS: ServiceItem[] = [
   { 
-    id: 'sofa-premium', 
-    name: 'Sofa (Premium)', 
+    id: 'sofa', 
+    name: 'Sofa', 
     selected: false, 
     userPrice: 0,
-    description: 'Premium quality sofa for 3BHK'
+    description: 'Premium quality sofa for your home'
   },
   { 
-    id: 'dining-table-premium', 
-    name: 'Dining Table (Premium)', 
+    id: 'dining-table', 
+    name: 'Dining Table', 
     selected: false, 
     userPrice: 0,
-    description: 'Premium dining table for 3BHK'
+    description: 'Premium dining table for your home'
   },
   { 
-    id: 'carpets-premium', 
-    name: 'Carpets (Premium)', 
+    id: 'carpets', 
+    name: 'Carpets', 
     selected: false, 
     userPrice: 0,
-    description: 'Premium carpets for 3BHK'
+    description: 'Premium carpets for your home'
   },
   { 
-    id: 'designer-lights-premium', 
-    name: 'Designer Lights (Premium)', 
+    id: 'designer-lights', 
+    name: 'Designer Lights', 
     selected: false, 
     userPrice: 0,
-    description: 'Premium designer lights for 3BHK'
+    description: 'Premium designer lights for your home'
+  },
+  { 
+    id: 'curtains', 
+    name: 'Curtains', 
+    selected: false, 
+    userPrice: 0,
+    description: 'Premium curtains for your home'
   }
 ]; 

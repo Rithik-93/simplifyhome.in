@@ -1,7 +1,7 @@
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import type { FurnitureItem, SingleLineItem, RoomSizeSelection, HomeDetails } from '../../types'
-import { ROOM_DIMENSIONS } from '../../types'
+import { getRoomDimensions } from '../../types'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 
@@ -24,20 +24,43 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
   onNext, 
   onPrev 
 }) => {
-  // State for room size selections for each category
-  const [roomSizes, setRoomSizes] = useState<RoomSizeSelection>({
-    'Master Bedroom': 0,
-    'Children Bedroom': 0,
-    'Guest Bedroom': 0,
-    'Living Room': 0,
-    'Pooja Room': 0,
-    'Modular Kitchen': 0
+  // Get unique categories from furniture items dynamically
+  const categories = useMemo(() => {
+    const uniqueCategories = [...new Set(furnitureItems.map(item => item.category))]
+    
+    // Filter based on home type - only exclude Guest Bedroom for 2BHK
+    if (homeDetails.homeType === '2BHK') {
+      return uniqueCategories.filter(category => category !== 'Guest Bedroom')
+    }
+    
+    return uniqueCategories
+  }, [furnitureItems, homeDetails.homeType])
+
+  // Initialize room sizes dynamically based on available categories
+  const [roomSizes, setRoomSizes] = useState<RoomSizeSelection>(() => {
+    const initialSizes: RoomSizeSelection = {}
+    categories.forEach(category => {
+      initialSizes[category] = 0
+    })
+    return initialSizes
   })
+
+  // Update room sizes when categories change
+  useEffect(() => {
+    setRoomSizes(prevSizes => {
+      const newSizes: RoomSizeSelection = {}
+      categories.forEach(category => {
+        // Keep existing selection if available, otherwise default to 0
+        newSizes[category] = prevSizes[category] ?? 0
+      })
+      return newSizes
+    })
+  }, [categories])
 
   // Calculate total price for furniture items based on user input (price per sqft * room area * quantity)
   const calculateItemTotalPrice = useCallback((item: FurnitureItem) => {
-    const roomDimensions = ROOM_DIMENSIONS[item.category as keyof typeof ROOM_DIMENSIONS]
-    const selectedDimension = roomDimensions[roomSizes[item.category]]
+    const roomDimensions = getRoomDimensions(item.category)
+    const selectedDimension = roomDimensions[roomSizes[item.category] || 0]
     const roomArea = selectedDimension.length * selectedDimension.width
     return item.userPrice * roomArea * item.quantity
   }, [roomSizes])
@@ -102,20 +125,10 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
   }, [roomSizes])
 
   const getRoomArea = useCallback((category: string) => {
-    const roomDimensions = ROOM_DIMENSIONS[category as keyof typeof ROOM_DIMENSIONS]
-    const selectedDimension = roomDimensions[roomSizes[category]]
+    const roomDimensions = getRoomDimensions(category)
+    const selectedDimension = roomDimensions[roomSizes[category] || 0]
     return selectedDimension.length * selectedDimension.width
   }, [roomSizes])
-
-  // Filter categories based on home type
-  const categories = [
-    'Master Bedroom',
-    'Children Bedroom',
-    ...(homeDetails.homeType === '3BHK' ? ['Guest Bedroom'] : []),
-    'Living Room',
-    'Pooja Room',
-    'Modular Kitchen'
-  ]
 
   const getItemsByCategory = useCallback((category: string) => {
     return furnitureItems.filter(item => item.category === category)
@@ -133,17 +146,7 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
       setLocalQty(item.quantity.toString())
     }, [item.userPrice, item.quantity])
   
-          const commitPrice = () => {
-        const price = Number.parseFloat(localPrice) || 0
-        updateFurniturePrice(item.id, price)
-      }
-  
-    const commitQty = () => {
-      const qty = Math.max(1, Number.parseInt(localQty) || 1)
-      updateFurnitureQuantity(item.id, qty)
-    }
-  
-          const handleSave = () => {
+    const handleSave = () => {
         const price = Number.parseFloat(localPrice) || 0
         const qty = Math.max(1, Number.parseInt(localQty) || 1)
         
@@ -339,8 +342,8 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
 
   const CategoryColumn = ({ category }: { category: string }) => {
     const categoryItems = getItemsByCategory(category)
-    const roomDimensions = ROOM_DIMENSIONS[category as keyof typeof ROOM_DIMENSIONS]
-    const selectedDimension = roomDimensions[roomSizes[category]]
+    const roomDimensions = getRoomDimensions(category)
+    const selectedDimension = roomDimensions[roomSizes[category] || 0]
     
     return (
       <div className="bg-gray-50 rounded-lg p-2 border border-gray-200">
@@ -442,8 +445,8 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
               {/* Furniture Items */}
               {furnitureItems.filter(item => item.selected).map((item) => {
                 const totalPrice = calculateItemTotalPrice(item)
-                const roomDimensions = ROOM_DIMENSIONS[item.category as keyof typeof ROOM_DIMENSIONS]
-                const selectedDimension = roomDimensions[roomSizes[item.category]]
+                const roomDimensions = getRoomDimensions(item.category)
+                const selectedDimension = roomDimensions[roomSizes[item.category] || 0]
                 const roomArea = selectedDimension.length * selectedDimension.width
                 return (
                   <div key={item.id} className="bg-white rounded p-2 sm:p-3 border border-yellow-400 shadow-sm min-w-0 overflow-hidden">

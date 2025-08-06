@@ -1,5 +1,4 @@
 import { useCallback } from 'react'
-import { Zap, Home, Sofa, Paintbrush2, Settings, UtensilsCrossed, Lightbulb } from 'lucide-react'
 import type { ServiceItem, HomeDetails } from '../../types'
 
 interface ServicesStepProps {
@@ -49,46 +48,27 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
     return service.userPrice
   }, [])
 
-  const getServiceIcon = useCallback((serviceId: string) => {
-    const icons: { [key: string]: React.ComponentType<any> } = {
-      'electrical': Zap,
-      'false-ceiling': Home,
-      'sofa-dining': Sofa,
-      'full-house-painting': Paintbrush2,
-      'sofa-premium': Sofa,
-      'dining-table-premium': UtensilsCrossed,
-      'carpets-premium': Home,
-      'designer-lights-premium': Lightbulb
-    }
-    return icons[serviceId] || Settings
-  }, [])
+
 
   // Generate dynamic description based on home type
   const getDynamicDescription = useCallback((service: ServiceItem) => {
-    return service.description.replace('3BHK', homeDetails.homeType)
+    return service.description.replace('your home', homeDetails.homeType)
   }, [homeDetails.homeType])
 
   // Generate dynamic service name based on quality tier
   const getDynamicServiceName = useCallback((service: ServiceItem) => {
-    if (service.id.includes('-premium')) {
-      return service.name.replace('(Premium)', `(${homeDetails.qualityTier})`)
+    // For new service format, append quality tier
+    if (homeDetails.qualityTier) {
+      return `${service.name} (${homeDetails.qualityTier})`
     }
     return service.name
   }, [homeDetails.qualityTier])
 
   const ServiceCard = ({ service }: { service: ServiceItem }) => {
-    const IconComponent = getServiceIcon(service.id)
-    
     return (
       <div className="bg-white rounded-lg p-2 border border-gray-200 hover:border-yellow-400 transition-all duration-200 hover:shadow-sm w-full max-w-full min-w-0 overflow-hidden">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center flex-1 min-w-0">
-            <div className="mr-2 flex items-center justify-center flex-shrink-0">
-              <IconComponent 
-                size={20} 
-                className="text-yellow-600"
-              />
-            </div>
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-semibold text-black leading-tight truncate">{getDynamicServiceName(service)}</h3>
               <p className="text-xs text-gray-700 truncate">

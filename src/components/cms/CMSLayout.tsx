@@ -1,5 +1,5 @@
 import React from 'react'
-import { Home, Package, Settings, Users, Plus, Search, Bell, User, ArrowLeft } from 'lucide-react'
+import { Home, Package, Settings, Search, Bell, User, ArrowLeft } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Link } from 'react-router-dom'
@@ -15,7 +15,6 @@ const CMSLayout: React.FC<CMSLayoutProps> = ({ children, currentPage, onNavigate
     { id: 'dashboard', label: 'Dashboard', icon: Home },
     { id: 'items', label: 'Items', icon: Package },
     { id: 'categories', label: 'Categories', icon: Settings },
-    { id: 'users', label: 'Users', icon: Users },
   ]
 
   return (
@@ -24,7 +23,7 @@ const CMSLayout: React.FC<CMSLayoutProps> = ({ children, currentPage, onNavigate
       <header className="bg-white shadow-sm border-b">
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-gray-900">SimplifyHomes CMS</h1>
+                            <h1 className="text-2xl font-bold text-gray-900">Interior Calculator CMS</h1>
             <Link to="/">
               <Button variant="outline" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-2" />

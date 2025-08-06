@@ -104,7 +104,7 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
   //   const dataStr = JSON.stringify(estimateData, null, 2)
   //   const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
     
-  //   const exportFileDefaultName = `SimplifyHomes_Estimate_${appState.userDetails.name.replace(/\s+/g, '_')}.json`
+  //   const exportFileDefaultName = `Interior_Estimate_${appState.userDetails.name.replace(/\s+/g, '_')}.json`
     
   //   const linkElement = document.createElement('a')
   //   linkElement.setAttribute('href', dataUri)
@@ -281,16 +281,8 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
               Ready to Get Started?
             </h4>
             <p className="text-gray-700 mb-2 sm:mb-3 text-xs sm:text-sm">
-              Contact our design experts for a free consultation
+              Use this estimate to plan your interior design project
             </p>
-            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 justify-center text-xs sm:text-sm">
-              <div className="text-black">
-                <span className="font-semibold">Website:</span> simplifyhome.in
-              </div>
-              <div className="text-black">
-                <span className="font-semibold">Email:</span> info@simplifyhome.in
-              </div>
-            </div>
           </div>
         </div>
       </div>

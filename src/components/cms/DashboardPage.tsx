@@ -86,7 +86,7 @@ const DashboardPage: React.FC = () => {
       {/* Page Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-2">Welcome to your SimplifyHomes CMS dashboard</p>
+                        <p className="text-gray-600 mt-2">Welcome to your Interior Calculator CMS dashboard</p>
       </div>
 
       {/* Error Message */}

@@ -3,7 +3,6 @@ import CMSLayout from './CMSLayout'
 import DashboardPage from './DashboardPage'
 import ItemsPage from './ItemsPage'
 import CategoriesPage from './CategoriesPage'
-import UsersPage from './UsersPage'
 
 const CMSApp: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('dashboard')
@@ -16,8 +15,6 @@ const CMSApp: React.FC = () => {
         return <ItemsPage />
       case 'categories':
         return <CategoriesPage />
-      case 'users':
-        return <UsersPage />
       default:
         return <DashboardPage />
     }
