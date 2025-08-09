@@ -125,10 +125,28 @@ export const dashboardAPI = {
   }
 }
 
+// Email API
+export const emailAPI = {
+  sendEstimate: async (payload: {
+    to: string
+    subject?: string
+    text?: string
+    html?: string
+    fileName?: string
+    fileBase64: string // base64 of PDF without data URI prefix
+  }): Promise<CMSResponse<any>> => {
+    return apiRequest<any>('/email/send-estimate', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+  }
+}
+
 
 
 export default {
   items: itemsAPI,
   categories: categoriesAPI,
   dashboard: dashboardAPI,
+  email: emailAPI,
 } 

@@ -4,6 +4,7 @@ import type { AppState, EstimateItem } from '../../types'
 import { getRoomDimensions } from '../../types'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
+import api from '../../services/api'
 
 interface EstimateStepProps {
   appState: AppState
@@ -101,12 +102,12 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
     if (!target) return
 
     const canvas = await html2canvas(target, {
-      scale: 2,
+      scale: 1.5,
       useCORS: true,
       backgroundColor: '#ffffff'
     })
 
-    const imgData = canvas.toDataURL('image/png')
+    const imgData = canvas.toDataURL('image/jpeg', 0.85)
     const pdf = new jsPDF('p', 'mm', 'a4')
     const pageWidth = pdf.internal.pageSize.getWidth()
     const pageHeight = pdf.internal.pageSize.getHeight()
@@ -131,6 +132,69 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
     const safeName = (appState.userDetails.name || 'Estimate').replace(/[^a-z0-9_-]+/gi, '_')
     const dateStr = new Date().toISOString().slice(0, 10)
     pdf.save(`Interior_Estimate_${safeName}_${dateStr}.pdf`)
+  }
+
+  const generatePDFAttachmentBase64 = async (): Promise<{ base64: string; fileName: string } | null> => {
+    const target = pdfHiddenRef.current || pdfRef.current
+    if (!target) return null
+
+    const canvas = await html2canvas(target, {
+      scale: 1.5,
+      useCORS: true,
+      backgroundColor: '#ffffff'
+    })
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.85)
+    const pdf = new jsPDF('p', 'mm', 'a4')
+    const pageWidth = pdf.internal.pageSize.getWidth()
+    const pageHeight = pdf.internal.pageSize.getHeight()
+
+    const margin = 8
+    const imgWidth = pageWidth - margin * 2
+    const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+    let heightLeft = imgHeight
+    let position = margin
+
+    pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight)
+    heightLeft -= pageHeight
+
+    while (heightLeft > 0) {
+      pdf.addPage()
+      position = heightLeft - imgHeight + margin
+      pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight)
+      heightLeft -= pageHeight
+    }
+
+    const safeName = (appState.userDetails.name || 'Estimate').replace(/[^a-z0-9_-]+/gi, '_')
+    const dateStr = new Date().toISOString().slice(0, 10)
+    const fileName = `Interior_Estimate_${safeName}_${dateStr}.pdf`
+    const base64 = pdf.output('datauristring').split(',')[1]
+    return { base64, fileName }
+  }
+
+  const sendEmail = async () => {
+    try {
+      const pdfData = await generatePDFAttachmentBase64()
+      if (!pdfData) return
+
+      const toEmail = appState.userDetails.email
+      if (!toEmail) {
+        alert('Please enter your email in the details step first.')
+        return
+      }
+
+      await api.email.sendEstimate({
+        to: toEmail,
+        subject: 'Your Interior Estimate',
+        text: 'Please find your interior estimate attached as a PDF.',
+        fileName: pdfData.fileName,
+        fileBase64: pdfData.base64,
+      })
+
+    } catch (error) {
+      console.error('Failed to send email', error)
+    }
   }
 
   // const downloadEstimate = () => {
@@ -310,6 +374,13 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
               aria-label="Download estimate as PDF"
             >
               Download PDF
+            </button>
+            <button
+              onClick={sendEmail}
+              className="order-4 px-4 sm:px-6 py-3 text-sm sm:text-base font-semibold rounded-lg sm:rounded-xl bg-blue-600 text-white hover:bg-blue-500 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 min-h-[44px]"
+              aria-label="Email estimate as PDF"
+            >
+              Email PDF
             </button>
             <button
               onClick={onRestart}
