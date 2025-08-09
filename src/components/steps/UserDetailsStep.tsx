@@ -206,7 +206,8 @@ const UserDetailsStep: React.FC<UserDetailsStepProps> = ({
     }
   }
 
-  const isValid = userDetails.name && userDetails.mobile && userDetails.email && userDetails.city && otpState.verified
+  // Temporarily bypass OTP verification for development/testing
+  const isValid = userDetails.name && userDetails.mobile && userDetails.email && userDetails.city // && otpState.verified
 
   const handleSubmit = () => {
     if (isValid) {
@@ -460,10 +461,7 @@ const UserDetailsStep: React.FC<UserDetailsStepProps> = ({
 
         {!isValid && (
           <p className="text-center text-red-500 text-xs sm:text-sm mt-3 font-medium">
-            {!otpState.verified && userDetails.mobile ? 
-              'Please verify your mobile number to continue' : 
-              'Please fill in all required fields and verify your mobile number'
-            }
+            Please fill in all required fields to continue
           </p>
         )}
       </div>

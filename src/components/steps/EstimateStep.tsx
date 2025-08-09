@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { RotateCcw } from 'lucide-react'
 import type { AppState, EstimateItem } from '../../types'
-import { ROOM_DIMENSIONS } from '../../types'
+import { getRoomDimensions } from '../../types'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
 
 interface EstimateStepProps {
   appState: AppState
@@ -16,6 +18,8 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
 }) => {
   const [estimate, setEstimate] = useState<EstimateItem[]>([])
   const [finalPrice, setFinalPrice] = useState(0)
+  const pdfRef = useRef<HTMLDivElement>(null)
+  const pdfHiddenRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     calculateEstimate()
@@ -49,9 +53,9 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
         
         // Calculate room area (using default room size since user's selection isn't stored in AppState)
         // TODO: Store user's room size selections in AppState for accurate estimates
-        const roomDimensions = ROOM_DIMENSIONS[item.category as keyof typeof ROOM_DIMENSIONS]
-        const defaultDimension = roomDimensions[0] // Use first option as default
-        const roomArea = defaultDimension.length * defaultDimension.width
+        const roomDimensions = getRoomDimensions(item.category)
+        const defaultDimension = roomDimensions[0]
+        const roomArea = (defaultDimension?.length ?? 10) * (defaultDimension?.width ?? 10)
         
         const price = item.userPrice * roomArea * item.quantity
         acc[item.category].push({ name: item.name, price })
@@ -92,6 +96,43 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
     setFinalPrice(totalPrice)
   }
 
+  const downloadPDF = async () => {
+    const target = pdfHiddenRef.current || pdfRef.current
+    if (!target) return
+
+    const canvas = await html2canvas(target, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#ffffff'
+    })
+
+    const imgData = canvas.toDataURL('image/png')
+    const pdf = new jsPDF('p', 'mm', 'a4')
+    const pageWidth = pdf.internal.pageSize.getWidth()
+    const pageHeight = pdf.internal.pageSize.getHeight()
+
+    const margin = 8
+    const imgWidth = pageWidth - margin * 2
+    const imgHeight = (canvas.height * imgWidth) / canvas.width
+
+    let heightLeft = imgHeight
+    let position = margin
+
+    pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight)
+    heightLeft -= pageHeight
+
+    while (heightLeft > 0) {
+      pdf.addPage()
+      position = heightLeft - imgHeight + margin
+      pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight)
+      heightLeft -= pageHeight
+    }
+
+    const safeName = (appState.userDetails.name || 'Estimate').replace(/[^a-z0-9_-]+/gi, '_')
+    const dateStr = new Date().toISOString().slice(0, 10)
+    pdf.save(`Interior_Estimate_${safeName}_${dateStr}.pdf`)
+  }
+
   // const downloadEstimate = () => {
   //   const estimateData = {
   //     userDetails: appState.userDetails,
@@ -114,7 +155,7 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
 
   return (
     <div className="w-full max-w-full mx-auto px-2 sm:px-4 overflow-x-hidden">
-      <div className="bg-white rounded-lg sm:rounded-xl shadow-lg sm:shadow-xl border-2 border-yellow-400 overflow-hidden max-w-4xl mx-auto w-full">
+      <div ref={pdfRef} className="bg-white rounded-lg sm:rounded-xl shadow-lg sm:shadow-xl border-2 border-yellow-400 overflow-hidden max-w-4xl mx-auto w-full">
         {/* Header */}
         <div className="bg-black text-yellow-400 p-3 sm:p-6 w-full max-w-full overflow-x-hidden">
           <div className="text-center">
@@ -255,13 +296,20 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
         </div> */}
 
         {/* Action Buttons */}
-        <div className="p-3 sm:p-4 bg-white border-t-2 border-gray-200">
+        <div className="p-3 sm:p-4 bg-white border-t-2 border-gray-200" data-html2canvas-ignore="true">
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
               onClick={onPrev}
               className="order-2 sm:order-1 px-4 sm:px-6 py-3 text-sm sm:text-base font-semibold rounded-lg sm:rounded-xl border-2 border-black text-black hover:bg-black hover:text-yellow-400 transition-all duration-300 transform hover:-translate-y-1 min-h-[44px]"
             >
               ← Edit Details
+            </button>
+            <button
+              onClick={downloadPDF}
+              className="order-3 px-4 sm:px-6 py-3 text-sm sm:text-base font-semibold rounded-lg sm:rounded-xl bg-yellow-400 text-black hover:bg-yellow-300 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 min-h-[44px]"
+              aria-label="Download estimate as PDF"
+            >
+              Download PDF
             </button>
             <button
               onClick={onRestart}
@@ -283,6 +331,110 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
             <p className="text-gray-700 mb-2 sm:mb-3 text-xs sm:text-sm">
               Use this estimate to plan your interior design project
             </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Hidden PDF-friendly content (inline styles only; no Tailwind to avoid oklch) */}
+      <div
+        ref={pdfHiddenRef}
+        style={{
+          position: 'fixed',
+          left: '-10000px',
+          top: 0,
+          width: '800px',
+          background: '#ffffff',
+          color: '#000000',
+          padding: '24px',
+          fontFamily: 'Inter, Arial, sans-serif'
+        }}
+      >
+        <div
+          style={{
+            background: '#000000',
+            color: '#FFBD01',
+            padding: '16px',
+            borderRadius: '8px',
+            textAlign: 'center',
+            marginBottom: '16px'
+          }}
+        >
+          <div style={{ fontSize: '20px', fontWeight: 700, marginBottom: '6px' }}>Your Interior Estimate</div>
+          <div style={{ fontSize: '12px', color: '#FFE08A' }}>
+            Complete cost breakdown for your {appState.homeDetails.homeType} home
+          </div>
+        </div>
+
+        {/* User Details */}
+        <div style={{ background: '#FFF9DB', border: '2px solid #FFBD01', borderRadius: '8px', padding: '12px', marginBottom: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '12px' }}>
+            <div>
+              <div style={{ fontWeight: 700 }}>Name</div>
+              <div>{appState.userDetails.name}</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700 }}>Mobile</div>
+              <div>{appState.userDetails.mobile}</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700 }}>Email</div>
+              <div>{appState.userDetails.email}</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700 }}>City</div>
+              <div>{appState.userDetails.city}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Home Details */}
+        <div style={{ background: '#F7F7F7', border: '2px solid #E5E5E5', borderRadius: '8px', padding: '12px', marginBottom: '12px', fontSize: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+            <div>
+              <div style={{ fontWeight: 700 }}>Home Type</div>
+              <div style={{ fontWeight: 700, fontSize: '14px' }}>{appState.homeDetails.homeType}</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700 }}>Quality Tier</div>
+              <div style={{ fontWeight: 700, fontSize: '14px' }}>{appState.homeDetails.qualityTier}</div>
+            </div>
+            <div>
+              <div style={{ fontWeight: 700 }}>Carpet Area</div>
+              <div style={{ fontWeight: 700, fontSize: '14px' }}>{appState.homeDetails.carpetArea} sq.ft</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Estimate Details */}
+        <div style={{ marginBottom: '12px' }}>
+          <div style={{ fontWeight: 700, fontSize: '16px', marginBottom: '8px' }}>Estimate Details</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {estimate.map((categoryEstimate, index) => (
+              <div key={index} style={{ border: '2px solid #FFBD01', borderRadius: '8px', padding: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <div style={{ fontWeight: 700 }}>{categoryEstimate.category}</div>
+                  <div style={{ fontWeight: 700, background: '#FFF3B0', padding: '4px 8px', borderRadius: '6px' }}>
+                    ₹{categoryEstimate.totalPrice.toLocaleString()}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {categoryEstimate.items.map((item, itemIndex) => (
+                    <div key={itemIndex} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #E5E5E5', paddingBottom: '4px' }}>
+                      <span style={{ color: '#333333' }}>{item.name}</span>
+                      <span style={{ fontWeight: 700 }}>₹{item.price.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Final Price */}
+        <div style={{ background: '#000000', color: '#FFBD01', border: '2px solid #FFBD01', borderRadius: '8px', padding: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontWeight: 700, fontSize: '18px' }}>Final Price</div>
+            <div style={{ fontWeight: 800, fontSize: '22px' }}>₹{finalPrice.toLocaleString()}</div>
           </div>
         </div>
       </div>
