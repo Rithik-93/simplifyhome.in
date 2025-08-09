@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw, Loader2, CheckCircle, XCircle } from 'lucide-react'
 import type { AppState, EstimateItem } from '../../types'
 import { getRoomDimensions } from '../../types'
 import jsPDF from 'jspdf'
@@ -21,6 +21,19 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
   const [finalPrice, setFinalPrice] = useState(0)
   const pdfRef = useRef<HTMLDivElement>(null)
   const pdfHiddenRef = useRef<HTMLDivElement>(null)
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error'; visible: boolean }>({
+    message: '',
+    type: 'success',
+    visible: false
+  })
+
+  const showToast = (message: string, type: 'success' | 'error', duration = 3000) => {
+    setToast({ message, type, visible: true })
+    window.setTimeout(() => {
+      setToast(prev => ({ ...prev, visible: false }))
+    }, duration)
+  }
 
   useEffect(() => {
     calculateEstimate()
@@ -175,6 +188,8 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
 
   const sendEmail = async () => {
     try {
+      setIsSendingEmail(true)
+
       const pdfData = await generatePDFAttachmentBase64()
       if (!pdfData) return
 
@@ -192,8 +207,12 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
         fileBase64: pdfData.base64,
       })
 
+      showToast('Estimate emailed successfully!', 'success')
     } catch (error) {
       console.error('Failed to send email', error)
+      showToast('Failed to send estimate. Please try again.', 'error')
+    } finally {
+      setIsSendingEmail(false)
     }
   }
 
@@ -377,10 +396,22 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
             </button>
             <button
               onClick={sendEmail}
-              className="order-4 px-4 sm:px-6 py-3 text-sm sm:text-base font-semibold rounded-lg sm:rounded-xl bg-blue-600 text-white hover:bg-blue-500 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 min-h-[44px]"
+              disabled={isSendingEmail}
+              className={`order-4 px-4 sm:px-6 py-3 text-sm sm:text-base font-semibold rounded-lg sm:rounded-xl transition-all duration-300 transform min-h-[44px] flex items-center justify-center gap-2 ${
+                isSendingEmail
+                  ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-500 hover:shadow-xl hover:-translate-y-1'
+              }`}
               aria-label="Email estimate as PDF"
             >
-              Email PDF
+              {isSendingEmail ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Sending...</span>
+                </>
+              ) : (
+                'Email PDF'
+              )}
             </button>
             <button
               onClick={onRestart}
@@ -509,6 +540,24 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
           </div>
         </div>
       </div>
+      {toast.visible && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50" aria-live="polite" aria-atomic="true">
+          <div
+            className={`flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg border-2 ${
+              toast.type === 'success'
+                ? 'bg-green-50 text-green-700 border-green-400'
+                : 'bg-red-50 text-red-700 border-red-400'
+            }`}
+          >
+            {toast.type === 'success' ? (
+              <CheckCircle className="w-4 h-4" />
+            ) : (
+              <XCircle className="w-4 h-4" />
+            )}
+            <span className="text-sm font-medium">{toast.message}</span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
