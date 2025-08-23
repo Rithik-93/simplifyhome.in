@@ -16,7 +16,10 @@ export interface FurnitureItem {
   selected: boolean;
   quantity: number;
   category: string;
+  type: string; // Added type field
   userPrice: number; // User input price
+  basePrice: number; // Base price from CMS for estimated calculations
+  pricePerSqFt: number; // Price per sq.ft from API
   totalPrice?: number; // Calculated as: userPrice × quantity
 }
 
@@ -37,7 +40,7 @@ export interface ServiceItem {
   name: string;
   selected: boolean;
   userPrice: number; // User input price
-  description: string;
+  description?: string;
 }
 
 export interface UserDetails {
@@ -47,15 +50,13 @@ export interface UserDetails {
   city: string;
 }
 
-// CMS Types
-export interface CMSItem {
+export type RoomType = 'BHK_1' | 'BHK_2' | 'BHK_3' | 'BHK_4';
+
+
+export interface CMSType {
   id: string;
   name: string;
-  category: string;
-  type: 'furniture' | 'singleLine' | 'service';
-  basePrice: number;
-  description?: string;
-  isActive: boolean;
+  categories?: CMSCategory[];
   createdAt: string | Date;
   updatedAt: string | Date;
 }
@@ -63,35 +64,54 @@ export interface CMSItem {
 export interface CMSCategory {
   id: string;
   name: string;
-  type: 'furniture' | 'singleLine' | 'service';
+  type: CMSType;
+  typeId: string;
+  items?: CMSItem[];
+  createdAt: string | Date;
+  updatedAt: string | Date;
+}
+
+export interface CMSItem {
+  id: string;
+  name: string;
   description?: string;
-  isActive: boolean;
+  availableInRooms: RoomType[];
+  pricePerSqFt: number;
+  imageUrl?: string;
+  category: CMSCategory;
+  categoryId: string;
   createdAt: string | Date;
   updatedAt: string | Date;
 }
 
 // API Request/Response types
-export interface CreateItemRequest {
+export interface CreateTypeRequest {
   name: string;
-  category: string;
-  type: 'furniture' | 'singleLine' | 'service';
-  basePrice: number;
-  description?: string;
-  isActive?: boolean;
 }
 
-export interface UpdateItemRequest extends Partial<CreateItemRequest> {
+export interface UpdateTypeRequest extends Partial<CreateTypeRequest> {
   id: string;
 }
 
 export interface CreateCategoryRequest {
   name: string;
-  type: 'furniture' | 'singleLine' | 'service';
-  description?: string;
-  isActive?: boolean;
+  typeId: string;
 }
 
 export interface UpdateCategoryRequest extends Partial<CreateCategoryRequest> {
+  id: string;
+}
+
+export interface CreateItemRequest {
+  name: string;
+  description?: string;
+  availableInRooms: RoomType[];
+  pricePerSqFt: number;
+  imageUrl?: string;
+  categoryId: string;
+}
+
+export interface UpdateItemRequest extends Partial<CreateItemRequest> {
   id: string;
 }
 
@@ -122,9 +142,9 @@ export interface GetItemsRequest {
   page?: number;
   limit?: number;
   search?: string;
-  category?: string;
-  type?: string;
-  isActive?: boolean;
+  categoryId?: string;
+  typeId?: string;
+  availableInRooms?: RoomType[];
 }
 
 export interface CMSPagination {
@@ -143,16 +163,18 @@ export interface CMSResponse<T> {
 
 export interface DashboardStats {
   totalItems: number;
-  activeItems: number;
+  totalTypes: number;
   totalCategories: number;
-  activeCategories: number;
-  itemsByType: {
-    furniture: number;
-    singleLine: number;
-    service: number;
+  itemsByRoomType: {
+    [key in RoomType]: number;
   };
   itemsByCategory: Array<{
     category: string;
+    type: string;
+    count: number;
+  }>;
+  itemsByType: Array<{
+    type: string;
     count: number;
   }>;
   recentItems: CMSItem[];
@@ -170,9 +192,7 @@ export interface EstimateItem {
 export interface AppState {
   currentStep: number;
   homeDetails: HomeDetails;
-  furnitureItems: FurnitureItem[];
-  singleLineItems: SingleLineItem[];
-  serviceItems: ServiceItem[];
+  items: FurnitureItem[]; // Consolidated items
   userDetails: UserDetails;
   estimate: EstimateItem[];
   finalPrice: number;
@@ -240,7 +260,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Master Bedroom',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 45000,
+    userPrice: 0,
+    pricePerSqFt: 450
   },
   {
     id: 'master-study-table',
@@ -248,7 +271,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Master Bedroom',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 15000,
+    userPrice: 0,
+    pricePerSqFt: 300
   },
   {
     id: 'master-tv-unit',
@@ -256,7 +282,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Master Bedroom',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 25000,
+    userPrice: 0,
+    pricePerSqFt: 400
   },
   {
     id: 'master-bed-unit',
@@ -264,7 +293,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Master Bedroom',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 35000,
+    userPrice: 0,
+    pricePerSqFt: 500
   },
 
   // Children Bedroom
@@ -274,7 +306,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Children Bedroom',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 35000,
+    userPrice: 0,
+    pricePerSqFt: 400
   },
   {
     id: 'children-study-table',
@@ -282,7 +317,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Children Bedroom',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 12000,
+    userPrice: 0,
+    pricePerSqFt: 250
   },
   {
     id: 'children-bed-unit',
@@ -290,7 +328,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Children Bedroom',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 28000,
+    userPrice: 0,
+    pricePerSqFt: 450
   },
 
   // Guest Bedroom
@@ -300,7 +341,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Guest Bedroom',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 40000,
+    userPrice: 0,
+    pricePerSqFt: 420
   },
   {
     id: 'guest-study-table',
@@ -308,7 +352,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Guest Bedroom',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 14000,
+    userPrice: 0,
+    pricePerSqFt: 280
   },
   {
     id: 'guest-bed-unit',
@@ -316,7 +363,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Guest Bedroom',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 32000,
+    userPrice: 0,
+    pricePerSqFt: 480
   },
 
   // Living Room
@@ -326,7 +376,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Living Room',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 30000,
+    userPrice: 0,
+    pricePerSqFt: 600
   },
   {
     id: 'living-tv-paneling',
@@ -334,7 +387,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Living Room',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 20000,
+    userPrice: 0,
+    pricePerSqFt: 350
   },
 
   // Pooja Room
@@ -344,7 +400,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Pooja Room',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 50000,
+    userPrice: 0,
+    pricePerSqFt: 800
   },
   {
     id: 'pooja-doors',
@@ -352,7 +411,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Pooja Room',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 15000,
+    userPrice: 0,
+    pricePerSqFt: 300
   },
 
   // Modular Kitchen
@@ -362,7 +424,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Modular Kitchen',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 60000,
+    userPrice: 0,
+    pricePerSqFt: 1200
   },
   {
     id: 'kitchen-base-unit-l-shaped',
@@ -370,7 +435,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Modular Kitchen',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 75000,
+    userPrice: 0,
+    pricePerSqFt: 1400
   },
   {
     id: 'kitchen-base-unit-island',
@@ -378,7 +446,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Modular Kitchen',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 85000,
+    userPrice: 0,
+    pricePerSqFt: 1600
   },
   {
     id: 'kitchen-tandem-baskets',
@@ -386,7 +457,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Modular Kitchen',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 25000,
+    userPrice: 0,
+    pricePerSqFt: 150
   },
   {
     id: 'kitchen-bottle-pullout',
@@ -394,7 +468,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Modular Kitchen',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 18000,
+    userPrice: 0,
+    pricePerSqFt: 120
   },
   {
     id: 'kitchen-corner-unit',
@@ -402,7 +479,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Modular Kitchen',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 45000,
+    userPrice: 0,
+    pricePerSqFt: 200
   },
   {
     id: 'kitchen-wicker-basket',
@@ -410,7 +490,10 @@ export const DEFAULT_FURNITURE_ITEMS: FurnitureItem[] = [
     selected: false,
     quantity: 1,
     category: 'Modular Kitchen',
-    userPrice: 0
+    type: 'Wood Work',
+    basePrice: 12000,
+    userPrice: 0,
+    pricePerSqFt: 80
   }
 ];
 

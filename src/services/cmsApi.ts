@@ -1,11 +1,14 @@
 import type { 
   CMSItem, 
   CMSCategory, 
+  CMSType,
   CMSUser, 
   CreateItemRequest, 
   UpdateItemRequest,
   CreateCategoryRequest,
   UpdateCategoryRequest,
+  CreateTypeRequest,
+  UpdateTypeRequest,
   CreateUserRequest,
   UpdateUserRequest,
   GetItemsRequest,
@@ -23,6 +26,8 @@ class CMSApiService {
   ): Promise<T> {
     const url = `${API_BASE_URL}/cms${endpoint}`;
     
+    console.log('CMS API Request:', { url, options })
+    
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
@@ -34,12 +39,18 @@ class CMSApiService {
     try {
       const response = await fetch(url, config);
       
+      console.log('CMS API Response status:', response.status)
+      
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('CMS API Error response:', errorData)
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log('CMS API Response data:', data)
+      
+      return data;
     } catch (error) {
       console.error(`API Error (${endpoint}):`, error);
       throw error;
@@ -63,9 +74,13 @@ class CMSApiService {
     if (params.page) queryParams.append('page', params.page.toString());
     if (params.limit) queryParams.append('limit', params.limit.toString());
     if (params.search) queryParams.append('search', params.search);
-    if (params.category) queryParams.append('category', params.category);
-    if (params.type) queryParams.append('type', params.type);
-    if (params.isActive !== undefined) queryParams.append('isActive', params.isActive.toString());
+    if (params.categoryId) queryParams.append('categoryId', params.categoryId);
+    if (params.typeId) queryParams.append('typeId', params.typeId);
+    if (params.availableInRooms) {
+      params.availableInRooms.forEach(roomType => {
+        queryParams.append('availableInRooms', roomType);
+      });
+    }
 
     const queryString = queryParams.toString();
     const endpoint = `/items${queryString ? `?${queryString}` : ''}`;
@@ -111,6 +126,53 @@ class CMSApiService {
     });
   }
 
+  // ==================== TYPES API ====================
+
+  async getTypes(): Promise<{
+    success: boolean;
+    data: CMSType[];
+  }> {
+    return this.request('/types');
+  }
+
+  async getType(id: string): Promise<{
+    success: boolean;
+    data: CMSType;
+  }> {
+    return this.request(`/types/${id}`);
+  }
+
+  async createType(typeData: CreateTypeRequest): Promise<{
+    success: boolean;
+    data: CMSType;
+    message: string;
+  }> {
+    return this.request('/types', {
+      method: 'POST',
+      body: JSON.stringify(typeData),
+    });
+  }
+
+  async updateType(id: string, typeData: UpdateTypeRequest): Promise<{
+    success: boolean;
+    data: CMSType;
+    message: string;
+  }> {
+    return this.request(`/types/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(typeData),
+    });
+  }
+
+  async deleteType(id: string): Promise<{
+    success: boolean;
+    message: string;
+  }> {
+    return this.request(`/types/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   // ==================== CATEGORIES API ====================
 
   async getCategories(): Promise<{
@@ -118,6 +180,13 @@ class CMSApiService {
     data: CMSCategory[];
   }> {
     return this.request('/categories');
+  }
+
+  async getCategoriesByType(typeId: string): Promise<{
+    success: boolean;
+    data: CMSCategory[];
+  }> {
+    return this.request(`/categories?typeId=${typeId}`);
   }
 
   async createCategory(categoryData: CreateCategoryRequest): Promise<{
@@ -202,47 +271,67 @@ class CMSApiService {
 
   // ==================== CONVENIENCE METHODS FOR MAIN APP ====================
 
-  // Get active furniture items for main app
+  // Backwards-compat helpers used by the main app
   async getActiveFurnitureItems(): Promise<CMSItem[]> {
     try {
-      const response = await this.getItems({
-        type: 'furniture',
-        isActive: true,
-        limit: 1000 // Get all active items
-      });
-      return response.data;
+      const response = await this.getItems({ limit: 1000 });
+      return (response.data || []).filter(i => (i as any).category?.type?.name?.toLowerCase().includes('woodwork'));
     } catch (error) {
-      console.error('Error fetching active furniture items:', error);
+      console.error('Error fetching furniture items:', error);
       return [];
     }
   }
 
-  // Get active single line items for main app
   async getActiveSingleLineItems(): Promise<CMSItem[]> {
     try {
-      const response = await this.getItems({
-        type: 'singleLine',
-        isActive: true,
-        limit: 1000 // Get all active items
-      });
-      return response.data;
+      const response = await this.getItems({ limit: 1000 });
+      return (response.data || []).filter(i => (i as any).category?.type?.name?.toLowerCase().includes('single line'));
     } catch (error) {
-      console.error('Error fetching active single line items:', error);
+      console.error('Error fetching single line items:', error);
       return [];
     }
   }
 
-  // Get active service items for main app
   async getActiveServiceItems(): Promise<CMSItem[]> {
     try {
+      const response = await this.getItems({ limit: 1000 });
+      return (response.data || []).filter(i => (i as any).category?.type?.name?.toLowerCase().includes('service'));
+    } catch (error) {
+      console.error('Error fetching service items:', error);
+      return [];
+    }
+  }
+
+  // New helpers
+  async getItemsByRoomType(roomType: string): Promise<CMSItem[]> {
+    try {
       const response = await this.getItems({
-        type: 'service',
-        isActive: true,
-        limit: 1000 // Get all active items
+        availableInRooms: [roomType as any],
+        limit: 1000
       });
       return response.data;
     } catch (error) {
-      console.error('Error fetching active service items:', error);
+      console.error(`Error fetching items for room type ${roomType}:`, error);
+      return [];
+    }
+  }
+
+  async getItemsByCategory(categoryId: string): Promise<CMSItem[]> {
+    try {
+      const response = await this.getItems({ categoryId, limit: 1000 });
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching items for category ${categoryId}:`, error);
+      return [];
+    }
+  }
+
+  async getItemsByType(typeId: string): Promise<CMSItem[]> {
+    try {
+      const response = await this.getItems({ typeId, limit: 1000 });
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching items for type ${typeId}:`, error);
       return [];
     }
   }

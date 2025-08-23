@@ -6,7 +6,7 @@ import { Select } from '../ui/select'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
-import type { CMSItem } from '../../types'
+import type { CMSItem, CMSCategory, CMSType, CreateItemRequest } from '../../types'
 import ItemForm from './ItemForm'
 import cmsApi from '../../services/cmsApi'
 
@@ -20,11 +20,17 @@ const formatDate = (dateString: string | Date): string => {
   }
 };
 
-const ItemsPage: React.FC = () => {
+interface ItemsPageProps {
+  categories?: CMSCategory[]
+  types?: CMSType[]
+}
+
+const ItemsPage: React.FC<ItemsPageProps> = ({ categories = [], types = [] }) => {
   const [showForm, setShowForm] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('all')
   const [filterCategory, setFilterCategory] = useState('all')
+  const [filterRoomType, setFilterRoomType] = useState('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [items, setItems] = useState<CMSItem[]>([])
@@ -47,8 +53,9 @@ const ItemsPage: React.FC = () => {
       }
       
       if (searchTerm) params.search = searchTerm
-      if (filterType !== 'all') params.type = filterType
-      if (filterCategory !== 'all') params.category = filterCategory
+      if (filterType !== 'all') params.typeId = filterType
+      if (filterCategory !== 'all') params.categoryId = filterCategory
+      if (filterRoomType !== 'all') params.availableInRooms = [filterRoomType]
       
       const response = await cmsApi.getItems(params)
       
@@ -65,7 +72,7 @@ const ItemsPage: React.FC = () => {
   // Load items on component mount and when filters change
   useEffect(() => {
     loadItems()
-  }, [pagination.page, searchTerm, filterType, filterCategory])
+  }, [pagination.page, searchTerm, filterType, filterCategory, filterRoomType])
 
   // Debounced search
   useEffect(() => {
@@ -80,9 +87,7 @@ const ItemsPage: React.FC = () => {
     return () => clearTimeout(timer)
   }, [searchTerm])
 
-  const categories = ['Master Bedroom', 'Kitchen', 'Services', 'Living Room', 'Children Bedroom', 'Guest Bedroom', 'Pooja Room']
-
-  const handleAddItem = async (newItem: Omit<CMSItem, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const handleAddItem = async (newItem: CreateItemRequest) => {
     try {
       const response = await cmsApi.createItem(newItem)
       setItems(prev => [response.data, ...prev])
@@ -126,7 +131,7 @@ const ItemsPage: React.FC = () => {
       {/* Filters */}
       <Card>
         <CardContent className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
@@ -138,23 +143,34 @@ const ItemsPage: React.FC = () => {
             </div>
             
             <Select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-            >
-              <option value="all">All Types</option>
-              <option value="furniture">Furniture</option>
-              <option value="singleLine">Single Line</option>
-              <option value="service">Service</option>
-            </Select>
-            
-            <Select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
             >
               <option value="all">All Categories</option>
               {categories.map(category => (
-                <option key={category} value={category}>{category}</option>
+                <option key={category.id} value={category.id}>{category.name}</option>
               ))}
+            </Select>
+            
+            <Select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+            >
+              <option value="all">All Types</option>
+              {types.map(type => (
+                <option key={type.id} value={type.id}>{type.name}</option>
+              ))}
+            </Select>
+
+            <Select
+              value={filterRoomType}
+              onChange={(e) => setFilterRoomType(e.target.value)}
+            >
+              <option value="all">All Room Types</option>
+              <option value="BHK_1">1 BHK</option>
+              <option value="BHK_2">2 BHK</option>
+              <option value="BHK_3">3 BHK</option>
+              <option value="BHK_4">4 BHK</option>
             </Select>
             
             <Button variant="outline" className="flex items-center">
@@ -198,8 +214,8 @@ const ItemsPage: React.FC = () => {
                     <TableHead>Name</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Type</TableHead>
-                    <TableHead>Base Price</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Price/Sq Ft</TableHead>
+                    <TableHead>Room Types</TableHead>
                     <TableHead>Updated</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -217,19 +233,25 @@ const ItemsPage: React.FC = () => {
                       )}
                     </div>
                   </TableCell>
-                  <TableCell>{item.category}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="capitalize">
-                      {item.type}
+                    <Badge variant="outline">
+                      {item.category?.name || 'Unknown Category'}
                     </Badge>
                   </TableCell>
-                  <TableCell>₹{item.basePrice.toLocaleString()}</TableCell>
                   <TableCell>
-                    <Badge 
-                      variant={item.isActive ? 'success' : 'inactive'}
-                    >
-                      {item.isActive ? 'Active' : 'Inactive'}
+                    <Badge variant="outline" className="capitalize">
+                      {item.category?.type?.name || 'Unknown Type'}
                     </Badge>
+                  </TableCell>
+                  <TableCell>₹{item.pricePerSqFt.toLocaleString()}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {item.availableInRooms.map(roomType => (
+                        <Badge key={roomType} variant="secondary" className="text-xs">
+                          {roomType.replace('BHK_', '')} BHK
+                        </Badge>
+                      ))}
+                    </div>
                   </TableCell>
                   <TableCell>{formatDate(item.updatedAt)}</TableCell>
                   <TableCell>
@@ -257,6 +279,7 @@ const ItemsPage: React.FC = () => {
           <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <ItemForm
               categories={categories}
+              types={types}
               onSubmit={handleAddItem}
               onCancel={() => {
                 setShowForm(false)

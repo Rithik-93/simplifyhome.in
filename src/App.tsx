@@ -1,8 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import type { AppState, FurnitureItem, SingleLineItem, ServiceItem, UserDetails } from './types'
-// Remove hardcoded imports since we'll fetch from API
-// import { DEFAULT_FURNITURE_ITEMS, DEFAULT_SINGLE_LINE_ITEMS, DEFAULT_SERVICE_ITEMS } from './types'
+import type { AppState, FurnitureItem, ServiceItem, UserDetails } from './types'
 import HomeTypeStep from './components/steps/HomeTypeStep'
 import FurnitureStep from './components/steps/FurnitureStep'
 import ServicesStep from './components/steps/ServicesStep'
@@ -14,44 +12,36 @@ import Disclaimer from './components/Disclaimer'
 import CMSApp from './components/cms/CMSApp'
 import { cmsApi } from './services/cmsApi'
 
-// Transform CMSItem to FurnitureItem
+// Transform CMSItem to FurnitureItem (map new CMS shape)
 const transformToFurnitureItem = (cmsItem: any): FurnitureItem => ({
   id: cmsItem.id || cmsItem._id,
   name: cmsItem.name,
-  category: cmsItem.category,
+  category: cmsItem?.category?.name || 'General',
+  type: cmsItem?.category?.type?.name || 'Miscellaneous', // Fixed: category.type.name
   selected: false,
   quantity: 1,
-  userPrice: 0 // User will enter price manually
-})
+  basePrice: cmsItem.pricePerSqFt || 0,
+  pricePerSqFt: cmsItem.pricePerSqFt || 0, // Add this line to map API pricePerSqFt
+  userPrice: 0,
+});
 
-// Transform CMSItem to SingleLineItem  
-const transformToSingleLineItem = (cmsItem: any): SingleLineItem => ({
-  id: cmsItem.id || cmsItem._id,
-  name: cmsItem.name,
-  selected: false,
-  userPrice: 0 // User will enter price manually
-})
-
-// Transform CMSItem to ServiceItem
-const transformToServiceItem = (cmsItem: any): ServiceItem => ({
-  id: cmsItem.id || cmsItem._id,
-  name: cmsItem.name,
-  selected: false,
-  userPrice: 0, // User will enter price manually
-  description: cmsItem.description || ''
-})
+const transformToServiceItem = (item: FurnitureItem): ServiceItem => ({
+  id: item.id,
+  name: item.name,
+  selected: item.selected,
+  userPrice: item.userPrice,
+  description: (item as any).description || '',
+});
 
 function MainApp() {
   const [appState, setAppState] = useState<AppState>({
     currentStep: 1,
     homeDetails: { homeType: '', qualityTier: '', carpetArea: 0 },
-    furnitureItems: [],
-    singleLineItems: [],
-    serviceItems: [],
+    items: [],
     userDetails: { name: '', mobile: '', email: '', city: '' },
     estimate: [],
-    finalPrice: 0
-  })
+    finalPrice: 0,
+  });
 
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -63,26 +53,26 @@ function MainApp() {
         setIsLoading(true)
         setError(null)
         
-        const [furnitureData, singleLineData, serviceData] = await Promise.all([
-          cmsApi.getActiveFurnitureItems(),
-          cmsApi.getActiveSingleLineItems(),
-          cmsApi.getActiveServiceItems()
-        ])
-
-        // Transform API data to frontend format
-        const furnitureItems = furnitureData.map(transformToFurnitureItem)
-        const singleLineItems = singleLineData.map(transformToSingleLineItem)
-        const serviceItems = serviceData.map(transformToServiceItem)
+        console.log('Fetching items from API...')
+        const response = await cmsApi.getItems({ limit: 1000 }); // Fetch all items
+        
+        console.log('API Response:', response)
+        console.log('Items data:', response.data)
+        
+        if (!response.data || !Array.isArray(response.data)) {
+          throw new Error('Invalid response format: data is not an array')
+        }
+        
+        const allItems = response.data.map(transformToFurnitureItem);
+        console.log('Transformed items:', allItems)
 
         setAppState(prev => ({
           ...prev,
-          furnitureItems,
-          singleLineItems,
-          serviceItems
-        }))
+          items: allItems,
+        }));
       } catch (err) {
         console.error('Error fetching items:', err)
-        setError('Failed to load items. Please refresh the page.')
+        setError(`Failed to load items: ${err instanceof Error ? err.message : 'Unknown error'}`)
       } finally {
         setIsLoading(false)
       }
@@ -96,17 +86,9 @@ function MainApp() {
   }, [])
 
   // Create stable update functions using useCallback
-  const updateFurnitureItems = useCallback((furnitureItems: FurnitureItem[]) => {
-    setAppState(prev => ({ ...prev, furnitureItems }))
-  }, [])
-
-  const updateSingleLineItems = useCallback((singleLineItems: SingleLineItem[]) => {
-    setAppState(prev => ({ ...prev, singleLineItems }))
-  }, [])
-
-  const updateServiceItems = useCallback((serviceItems: ServiceItem[]) => {
-    setAppState(prev => ({ ...prev, serviceItems }))
-  }, [])
+  const updateItems = useCallback((items: FurnitureItem[]) => {
+    setAppState(prev => ({ ...prev, items }));
+  }, []);
 
   const updateUserDetails = useCallback((userDetails: UserDetails) => {
     setAppState(prev => ({ ...prev, userDetails }))
@@ -137,11 +119,9 @@ function MainApp() {
       case 2:
         return (
           <FurnitureStep
-            furnitureItems={appState.furnitureItems}
-            singleLineItems={appState.singleLineItems}
+            items={appState.items}
             homeDetails={appState.homeDetails}
-            onUpdateFurniture={updateFurnitureItems}
-            onUpdateSingleLine={updateSingleLineItems}
+            onUpdateItems={updateItems}
             onNext={nextStep}
             onPrev={prevStep}
           />
@@ -149,10 +129,19 @@ function MainApp() {
       case 3:
         return (
           <ServicesStep
-            serviceItems={appState.serviceItems}
+            serviceItems={appState.items.filter(item => item.type === 'Service').map(transformToServiceItem)}
             homeDetails={appState.homeDetails}
             carpetArea={appState.homeDetails.carpetArea}
-            onUpdate={updateServiceItems}
+            onUpdate={(updatedItems) => {
+              const newItems = appState.items.map(item => {
+                const updated = updatedItems.find(u => u.id === item.id);
+                if (updated) {
+                  return { ...item, ...updated };
+                }
+                return item;
+              });
+              updateItems(newItems);
+            }}
             onNext={nextStep}
             onPrev={prevStep}
           />

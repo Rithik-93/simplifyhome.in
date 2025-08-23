@@ -2,94 +2,71 @@ import React, { useState } from 'react'
 import { Plus, Edit, Trash2, Package } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
-import { Select } from '../ui/select'
-import { Textarea } from '../ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
-import { Badge } from '../ui/badge'
 
-import type { CMSCategory } from '../../types'
+import type { CMSCategory, CMSType, CreateCategoryRequest } from '../../types'
 
-const CategoriesPage: React.FC = () => {
+interface CategoriesPageProps {
+  categories?: CMSCategory[]
+  types: CMSType[]
+  onCreateCategory?: (category: CreateCategoryRequest) => void
+  onUpdateCategory?: (id: string, category: Partial<CreateCategoryRequest>) => void
+  onDeleteCategory?: (id: string) => void
+}
+
+const CategoriesPage: React.FC<CategoriesPageProps> = ({
+  categories: propCategories = [],
+  types,
+  onCreateCategory,
+  onUpdateCategory,
+  onDeleteCategory
+}) => {
   const [showForm, setShowForm] = useState(false)
   const [editingCategory, setEditingCategory] = useState<CMSCategory | null>(null)
   const [formData, setFormData] = useState({
     name: '',
-    type: 'furniture' as 'furniture' | 'singleLine' | 'service',
-    description: '',
-    isActive: true
+    typeId: ''
   })
 
-  // Mock data - replace with actual API calls
-  const [categories, setCategories] = useState<CMSCategory[]>([
-    {
-      id: '1',
-      name: 'Master Bedroom',
-      type: 'furniture',
-      description: 'Furniture items for master bedroom',
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: '2',
-      name: 'Kitchen',
-      type: 'furniture',
-      description: 'Modular kitchen and kitchen accessories',
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: '3',
-      name: 'Services',
-      type: 'singleLine',
-      description: 'Installation and service items',
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: '4',
-      name: 'Living Room',
-      type: 'service',
-      description: 'Living room furniture and accessories',
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: '5',
-      name: 'Children Bedroom',
-      type: 'furniture',
-      description: 'Furniture for children\'s bedroom',
-      isActive: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-  ])
+  // Use prop categories or fallback to mock data
+  const [categories, setCategories] = useState<CMSCategory[]>(propCategories.length > 0 ? propCategories : [])
 
   const handleAddCategory = () => {
-    const newCategory: CMSCategory = {
-      id: Date.now().toString(),
-      name: formData.name,
-      type: formData.type,
-      description: formData.description,
-      isActive: formData.isActive,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+    if (onCreateCategory) {
+      onCreateCategory(formData)
+    } else {
+      // Fallback for local state
+      const newCategory: CMSCategory = {
+        id: Date.now().toString(),
+        name: formData.name,
+        typeId: formData.typeId,
+        type: types.find(t => t.id === formData.typeId) as CMSType,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+      setCategories(prev => [newCategory, ...prev])
     }
-    setCategories(prev => [newCategory, ...prev])
     setShowForm(false)
     resetForm()
   }
 
   const handleEditCategory = () => {
     if (editingCategory) {
-      setCategories(prev => prev.map(cat => 
-        cat.id === editingCategory.id 
-          ? { ...formData, id: cat.id, createdAt: cat.createdAt, updatedAt: new Date().toISOString() }
-          : cat
-      ))
+      if (onUpdateCategory) {
+        onUpdateCategory(editingCategory.id, formData)
+      } else {
+        // Fallback for local state
+        setCategories(prev => prev.map(cat => 
+          cat.id === editingCategory.id 
+            ? { 
+                ...cat, 
+                ...formData, 
+                type: types.find(t => t.id === formData.typeId) as CMSType,
+                updatedAt: new Date().toISOString() 
+              }
+            : cat
+        ))
+      }
       setEditingCategory(null)
       setShowForm(false)
       resetForm()
@@ -97,8 +74,13 @@ const CategoriesPage: React.FC = () => {
   }
 
   const handleDeleteCategory = (id: string) => {
-    if (confirm('Are you sure you want to delete this category?')) {
-      setCategories(prev => prev.filter(cat => cat.id !== id))
+    if (confirm('Are you sure you want to delete this category? All types and items in this category will also be affected.')) {
+      if (onDeleteCategory) {
+        onDeleteCategory(id)
+      } else {
+        // Fallback for local state
+        setCategories(prev => prev.filter(cat => cat.id !== id))
+      }
     }
   }
 
@@ -106,9 +88,7 @@ const CategoriesPage: React.FC = () => {
     setEditingCategory(category)
     setFormData({
       name: category.name,
-      type: category.type,
-      description: category.description || '',
-      isActive: category.isActive
+      typeId: category.typeId
     })
     setShowForm(true)
   }
@@ -116,14 +96,24 @@ const CategoriesPage: React.FC = () => {
   const resetForm = () => {
     setFormData({
       name: '',
-      type: 'furniture',
-      description: '',
-      isActive: true
+      typeId: ''
     })
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // Validate form
+    if (!formData.name.trim()) {
+      alert('Please enter a category name')
+      return
+    }
+    
+    if (!formData.typeId) {
+      alert('Please select a type')
+      return
+    }
+    
     if (editingCategory) {
       handleEditCategory()
     } else {
@@ -139,11 +129,23 @@ const CategoriesPage: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">Categories Management</h1>
           <p className="text-gray-600 mt-2">Organize your items into categories</p>
         </div>
-        <Button onClick={() => setShowForm(true)}>
+        <Button 
+          onClick={() => setShowForm(true)} 
+          disabled={types.length === 0}
+          title={types.length === 0 ? 'No types available. Please create a type first.' : ''}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Category
         </Button>
       </div>
+
+      {types.length === 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <p className="text-blue-800 text-sm">
+            <strong>No types available.</strong> Please create a type first before adding categories.
+          </p>
+        </div>
+      )}
 
       {/* Categories Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -155,24 +157,16 @@ const CategoriesPage: React.FC = () => {
                   <Package className="h-5 w-5 text-blue-600" />
                   <CardTitle className="text-lg">{category.name}</CardTitle>
                 </div>
-                <Badge 
-                  variant={category.isActive ? 'success' : 'inactive'}
-                  className="text-xs"
-                >
-                  {category.isActive ? 'Active' : 'Inactive'}
-                </Badge>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <div>
-                  <Badge variant="outline" className="capitalize">
-                    {category.type}
-                  </Badge>
+                <div className="text-sm text-gray-600">
+                  Type: {category.type?.name || 'Unknown'}
                 </div>
-                {category.description && (
-                  <p className="text-sm text-gray-600">{category.description}</p>
-                )}
+                <div className="text-sm text-gray-600">
+                  Items: {category.items?.length || 0}
+                </div>
                 <div className="flex space-x-2 pt-2">
                   <Button 
                     variant="outline" 
@@ -196,6 +190,21 @@ const CategoriesPage: React.FC = () => {
           </Card>
         ))}
       </div>
+
+      {categories.length === 0 && (
+        <Card>
+          <CardContent className="p-8 text-center">
+            {types.length === 0 ? (
+              <div>
+                <p className="text-gray-500 mb-2">No categories found</p>
+                <p className="text-sm text-gray-400">Create a type first, then add categories</p>
+              </div>
+            ) : (
+              <p className="text-gray-500">No categories found</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Category Form Modal */}
       {showForm && (
@@ -236,41 +245,19 @@ const CategoriesPage: React.FC = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Type *
                     </label>
-                    <Select
-                      value={formData.type}
-                      onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as any }))}
+                    <select
+                      value={formData.typeId}
+                      onChange={(e) => setFormData(prev => ({ ...prev, typeId: e.target.value }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       required
                     >
-                      <option value="furniture">Furniture</option>
-                      <option value="singleLine">Single Line</option>
-                      <option value="service">Service</option>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Description
-                    </label>
-                    <Textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Enter category description (optional)"
-                      rows={3}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={formData.isActive}
-                        onChange={(e) => setFormData(prev => ({ ...prev, isActive: e.target.checked }))}
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <span className="text-sm font-medium text-gray-700">
-                        Active
-                      </span>
-                    </label>
+                      <option value="">Select a type</option>
+                      {types.map((type) => (
+                        <option key={type.id} value={type.id}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div className="flex justify-end space-x-3 pt-4 border-t">

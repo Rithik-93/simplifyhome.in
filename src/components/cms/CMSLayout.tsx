@@ -1,5 +1,5 @@
 import React from 'react'
-import { Home, Package, Settings, Search, Bell, User, ArrowLeft } from 'lucide-react'
+import { Home, Package, Settings, Search, Bell, User, ArrowLeft, Tag } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import { Link } from 'react-router-dom'
@@ -13,8 +13,9 @@ interface CMSLayoutProps {
 const CMSLayout: React.FC<CMSLayoutProps> = ({ children, currentPage, onNavigate }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
-    { id: 'items', label: 'Items', icon: Package },
     { id: 'categories', label: 'Categories', icon: Settings },
+    { id: 'types', label: 'Types', icon: Tag },
+    { id: 'items', label: 'Items', icon: Package },
   ]
 
   return (
