@@ -8,9 +8,8 @@ const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => {
   const steps = [
     { id: 1, title: 'Home', shortTitle: 'Home', description: 'Select your home type and area' },
     { id: 2, title: 'Furniture', shortTitle: 'Furniture', description: 'Choose furniture items' },
-    { id: 3, title: 'Services', shortTitle: 'Services', description: 'Select optional services' },
-    { id: 4, title: 'Details', shortTitle: 'Details', description: 'Provide contact information' },
-    { id: 5, title: 'Estimate', shortTitle: 'Estimate', description: 'Review your final estimate' },
+    { id: 3, title: 'Details', shortTitle: 'Details', description: 'Provide contact information' },
+    { id: 4, title: 'Estimate', shortTitle: 'Estimate', description: 'Review your final estimate' },
   ]
 
   return (

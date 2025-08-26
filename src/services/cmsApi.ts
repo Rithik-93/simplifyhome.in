@@ -275,7 +275,11 @@ class CMSApiService {
   async getActiveFurnitureItems(): Promise<CMSItem[]> {
     try {
       const response = await this.getItems({ limit: 1000 });
-      return (response.data || []).filter(i => (i as any).category?.type?.name?.toLowerCase().includes('woodwork'));
+      return (response.data || []).filter(i => 
+        i.category?.type?.name?.toLowerCase().includes('woodwork') && 
+        i.premiumPricePerSqFt && 
+        i.luxuryPricePerSqFt
+      );
     } catch (error) {
       console.error('Error fetching furniture items:', error);
       return [];
@@ -285,7 +289,11 @@ class CMSApiService {
   async getActiveSingleLineItems(): Promise<CMSItem[]> {
     try {
       const response = await this.getItems({ limit: 1000 });
-      return (response.data || []).filter(i => (i as any).category?.type?.name?.toLowerCase().includes('single line'));
+      return (response.data || []).filter(i => 
+        i.category?.type?.name?.toLowerCase().includes('single line') && 
+        i.premiumPricePerSqFt && 
+        i.luxuryPricePerSqFt
+      );
     } catch (error) {
       console.error('Error fetching single line items:', error);
       return [];
@@ -295,14 +303,31 @@ class CMSApiService {
   async getActiveServiceItems(): Promise<CMSItem[]> {
     try {
       const response = await this.getItems({ limit: 1000 });
-      return (response.data || []).filter(i => (i as any).category?.type?.name?.toLowerCase().includes('service'));
+      return (response.data || []).filter(i => 
+        i.category?.type?.name?.toLowerCase().includes('service') && 
+        i.premiumPricePerSqFt && 
+        i.luxuryPricePerSqFt
+      );
     } catch (error) {
       console.error('Error fetching service items:', error);
       return [];
     }
   }
 
-  // New helpers
+  // New helpers for addon items
+  async getActiveAddonItems(): Promise<CMSItem[]> {
+    try {
+      const response = await this.getItems({ limit: 1000 });
+      return (response.data || []).filter(i => 
+        i.addonPricing && 
+        i.addonPricing.length > 0
+      );
+    } catch (error) {
+      console.error('Error fetching addon items:', error);
+      return [];
+    }
+  }
+
   async getItemsByRoomType(roomType: string): Promise<CMSItem[]> {
     try {
       const response = await this.getItems({

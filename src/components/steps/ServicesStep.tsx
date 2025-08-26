@@ -51,7 +51,7 @@ const ServicesStep: React.FC<ServicesStepProps> = ({
 
   // Generate dynamic description based on home type
   const getDynamicDescription = useCallback((service: ServiceItem) => {
-    return service.description.replace('your home', homeDetails.homeType)
+    return (service.description || '').replace('your home', homeDetails.homeType)
   }, [homeDetails.homeType])
 
   // Generate dynamic service name based on quality tier

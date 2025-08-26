@@ -392,6 +392,38 @@ const UserDetailsStep: React.FC<UserDetailsStepProps> = ({
           </div>
         </div>
 
+        {/* Design Consultation Question */}
+        <div className="mt-4 sm:mt-6 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg sm:rounded-xl p-4 sm:p-5 border-2 border-yellow-400 shadow-sm">
+          <div className="text-center">
+            <h4 className="text-base sm:text-lg font-semibold text-gray-800 mb-3">
+              Are you looking for a design consultation?
+            </h4>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                onClick={() => {
+                  // Handle Yes response
+                  console.log('Design consultation: Yes')
+                }}
+                className="px-6 py-2.5 bg-black text-yellow-400 rounded-lg font-medium hover:bg-gray-800 transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg min-h-[44px]"
+              >
+                Yes, I'd love to
+              </button>
+              <button
+                onClick={() => {
+                  // Handle No response
+                  console.log('Design consultation: No')
+                }}
+                className="px-6 py-2.5 bg-white text-gray-700 border-2 border-gray-300 rounded-lg font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 transform hover:-translate-y-1 min-h-[44px]"
+              >
+                Not right now
+              </button>
+            </div>
+            <p className="text-xs text-gray-600 mt-3">
+              Get personalized design advice from our expert interior designers
+            </p>
+          </div>
+        </div>
+
         {/* Privacy Notice */}
         <div className="mt-4 sm:mt-6 bg-yellow-50 rounded-lg sm:rounded-xl p-3 sm:p-4 border-2 border-yellow-400">
           <div className="flex items-start">

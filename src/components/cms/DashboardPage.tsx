@@ -74,7 +74,7 @@ const DashboardPage: React.FC = () => {
     },
     {
       title: 'BHK Coverage',
-      value: `${Object.keys(stats?.itemsByRoomType || {}).length}/4`,
+      value: `${Object.keys(stats?.itemsByRoomType || {}).length}/6`,
       icon: Package,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50'
@@ -143,47 +143,88 @@ const DashboardPage: React.FC = () => {
                   <TableHead>Name</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Type</TableHead>
-                  <TableHead>Price/Sq Ft</TableHead>
+                  <TableHead>Pricing Type</TableHead>
+                  <TableHead>Premium Price</TableHead>
+                  <TableHead>Luxury Price</TableHead>
                   <TableHead>Room Types</TableHead>
                   <TableHead>Updated</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {allItems.map((item: CMSItem) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">{item.name}</TableCell>
-                  <TableCell>{(item as any).type?.category?.name || '-'}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="capitalize">
-                      {(item as any).type?.name || '-'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>₹{(item as any).pricePerSqFt?.toLocaleString?.() || '0'}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {((item as any).availableInRooms || []).map((rt: string) => (
-                        <Badge key={rt} variant="secondary" className="text-xs">
-                          {rt.replace('BHK_', '')} BHK
+                {allItems.map((item: CMSItem) => {
+                  const isAddonItem = item.addonPricing && item.addonPricing.length > 0;
+                  const hasPerSqFtPricing = item.premiumPricePerSqFt && item.luxuryPricePerSqFt;
+                  
+                  return (
+                    <TableRow key={item.id}>
+                      <TableCell className="font-medium">{item.name}</TableCell>
+                      <TableCell>{item.category?.name || '-'}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="capitalize">
+                          {item.type?.name || item.category?.type?.name || '-'}
                         </Badge>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell>{formatDate(item.updatedAt)}</TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <button className="p-1 hover:bg-gray-100 rounded">
-                        <Edit className="h-4 w-4 text-blue-600" />
-                      </button>
-                      <button className="p-1 hover:bg-gray-100 rounded">
-                        <Trash2 className="h-4 w-4 text-red-600" />
-                      </button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={isAddonItem ? "secondary" : "default"}>
+                          {isAddonItem ? 'Addon' : 'Per Sq Ft'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {isAddonItem ? (
+                          <div className="text-sm">
+                            {item.addonPricing?.map((pricing, index) => (
+                              <div key={index} className="mb-1">
+                                <span className="font-medium">{pricing.roomType.replace('BHK_', '')} BHK:</span>
+                                <br />
+                                <span className="text-gray-600">₹{pricing.premiumPrice.toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span>₹{item.premiumPricePerSqFt?.toLocaleString() || '0'}/sq ft</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isAddonItem ? (
+                          <div className="text-sm">
+                            {item.addonPricing?.map((pricing, index) => (
+                              <div key={index} className="mb-1">
+                                <span className="font-medium">{pricing.roomType.replace('BHK_', '')} BHK:</span>
+                                <br />
+                                <span className="text-gray-600">₹{pricing.luxuryPrice.toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <span>₹{item.luxuryPricePerSqFt?.toLocaleString() || '0'}/sq ft</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {item.availableInRooms.map((rt: string) => (
+                            <Badge key={rt} variant="secondary" className="text-xs">
+                              {rt.replace('BHK_', '')} BHK
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell>{formatDate(item.updatedAt)}</TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <button className="p-1 hover:bg-gray-100 rounded">
+                            <Edit className="h-4 w-4 text-blue-600" />
+                          </button>
+                          <button className="p-1 hover:bg-gray-100 rounded">
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          </button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>

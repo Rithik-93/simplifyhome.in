@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { RotateCcw, Loader2, CheckCircle, XCircle } from 'lucide-react'
 import type { AppState, EstimateItem } from '../../types'
-import { getRoomDimensions } from '../../types'
+import { getRoomDimensions, ROOM_DIMENSIONS } from '../../types'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import api from '../../services/api'
@@ -43,68 +43,121 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
     const newEstimate: EstimateItem[] = []
     let totalPrice = 0
 
-    // Add single line items to estimate
-    const selectedSingleLineItems = appState.singleLineItems.filter(item => item.selected)
-    if (selectedSingleLineItems.length > 0) {
-      const singleLineItemsFormatted = selectedSingleLineItems.map(item => {
-        const price = item.userPrice * appState.homeDetails.carpetArea
-        return { name: item.name, price }
-      })
-      const singleLineTotal = singleLineItemsFormatted.reduce((sum, item) => sum + item.price, 0)
-      newEstimate.push({
-        category: 'Single Line Items',
-        items: singleLineItemsFormatted,
-        totalPrice: singleLineTotal
-      })
-      totalPrice += singleLineTotal
-    }
 
-    // Group furniture items by category using userPrice * roomArea * quantity
-    const furnitureByCategory = appState.furnitureItems
+
+    // Group items by type and category
+    const itemsByType = appState.items
       .filter(item => item.selected)
       .reduce((acc, item) => {
-        if (!acc[item.category]) acc[item.category] = []
-        
-        // Calculate room area (using default room size since user's selection isn't stored in AppState)
-        // TODO: Store user's room size selections in AppState for accurate estimates
-        const roomDimensions = getRoomDimensions(item.category)
-        const defaultDimension = roomDimensions[0]
-        const roomArea = (defaultDimension?.length ?? 10) * (defaultDimension?.width ?? 10)
-        
-        const price = item.userPrice * roomArea * item.quantity
-        acc[item.category].push({ name: item.name, price })
+        if (!acc[item.type]) acc[item.type] = {}
+        if (!acc[item.type][item.category]) acc[item.type][item.category] = []
+        acc[item.type][item.category].push(item)
         return acc
-      }, {} as { [key: string]: { name: string; price: number }[] })
-
-    // Add furniture categories to estimate
-    Object.entries(furnitureByCategory).forEach(([category, items]) => {
-      const categoryTotal = items.reduce((sum, item) => sum + item.price, 0)
-      newEstimate.push({
-        category,
-        items,
-        totalPrice: categoryTotal
+      }, {} as { [type: string]: { [category: string]: any[] } })
+      
+    // Debug: Check first selected item structure and test getRoomDimensions
+    const firstSelectedItem = appState.items.find(item => item.selected)
+    if (firstSelectedItem) {
+      console.log('First selected item structure:', firstSelectedItem)
+      console.log('Item properties:', {
+        name: firstSelectedItem.name,
+        type: firstSelectedItem.type,
+        category: firstSelectedItem.category,
+        userPrice: firstSelectedItem.userPrice,
+        pricePerSqFt: firstSelectedItem.pricePerSqFt,
+        basePrice: firstSelectedItem.basePrice,
+        userDimensions: firstSelectedItem.userDimensions
       })
-      totalPrice += categoryTotal
-    })
-
-    // Helper function to calculate service price
-    const calculateServicePrice = (service: any) => service.userPrice
-
-    // Add services to estimate
-    const selectedServices = appState.serviceItems.filter(service => service.selected)
-    if (selectedServices.length > 0) {
-      const serviceItems = selectedServices.map(service => {
-        const price = calculateServicePrice(service)
-        return { name: service.name, price }
-      })
-      const servicesTotal = serviceItems.reduce((sum, item) => sum + item.price, 0)
-      newEstimate.push({
-        category: 'Services',
-        items: serviceItems,
-        totalPrice: servicesTotal
-      })
-      totalPrice += servicesTotal
+      
+      // Test getRoomDimensions function
+      const testDimensions = getRoomDimensions(firstSelectedItem.category)
+      console.log(`getRoomDimensions for "${firstSelectedItem.category}":`, testDimensions)
     }
+      
+
+
+    // Process each type
+    Object.entries(itemsByType).forEach(([type, categories]) => {
+      Object.entries(categories).forEach(([category, items]) => {
+        const categoryItems = items.map((item: any) => {
+          let price = 0
+          
+          if (type === 'Single Line Items') {
+            // For single line items, use carpet area and price per sq ft
+            if (item.userPrice > 0) {
+              price = item.userPrice * appState.homeDetails.carpetArea
+            } else if (item.pricePerSqFt) {
+              price = item.pricePerSqFt * appState.homeDetails.carpetArea
+            } else {
+              // Fallback: use base price if available
+              price = item.basePrice || 0
+            }
+          } else if (type === 'Add Ons') {
+            // For add ons, use the user price directly (fixed price)
+            if (item.userPrice > 0) {
+              price = item.userPrice
+            } else {
+              // Use default pricing from addonPricing if available
+              const homeType = appState.homeDetails.homeType
+              const qualityTier = appState.homeDetails.qualityTier
+              if (item.addonPricing) {
+                const pricing = item.addonPricing.find((p: any) => 
+                  (homeType === '2BHK' && p.roomType === 'BHK_2') ||
+                  (homeType === '3BHK' && p.roomType === 'BHK_3')
+                )
+                if (pricing) {
+                  price = qualityTier === 'Luxury' ? pricing.luxuryPrice : pricing.premiumPrice
+                }
+              }
+              
+              // Fallback: use base price if available
+              if (price === 0) {
+                price = item.basePrice || 0
+              }
+            }
+          } else {
+            // For woodwork items, use user dimensions or default room dimensions
+            let roomArea = 0
+            
+            // Check if user has entered dimensions
+            if (item.userDimensions && item.userDimensions.length > 0 && item.userDimensions.width > 0) {
+              roomArea = item.userDimensions.length * item.userDimensions.width
+            } else {
+              // Use default room dimensions
+              const roomDimensions = getRoomDimensions(item.category)
+              const defaultDimension = roomDimensions[0]
+              roomArea = (defaultDimension?.length ?? 10) * (defaultDimension?.width ?? 10)
+              
+
+            }
+            
+            if (item.userPrice > 0) {
+              price = item.userPrice * roomArea
+            } else if (item.pricePerSqFt) {
+              price = item.pricePerSqFt * roomArea
+            } else {
+              // Fallback: use base price if available
+              price = item.basePrice || 0
+            }
+          }
+          
+
+          
+          // Ensure price is a valid number
+          const finalPrice = Math.round(price) || 0
+          
+          return { name: item.name, price: finalPrice }
+        })
+        
+        const categoryTotal = categoryItems.reduce((sum, item) => sum + item.price, 0)
+        newEstimate.push({
+          category: `${type} - ${category}`,
+          items: categoryItems,
+          totalPrice: categoryTotal
+        })
+        totalPrice += categoryTotal
+      })
+    })
 
     setEstimate(newEstimate)
     setFinalPrice(totalPrice)
@@ -336,47 +389,6 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
           </div>
         </div>
 
-        {/* Material Details */}
-        {/* <div className="p-3 sm:p-4 bg-gray-50 border-t-2 border-gray-200">
-          <h3 className="text-base sm:text-lg font-semibold text-black mb-3 sm:mb-4">
-            Material Details
-          </h3>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
-            <div>
-              <div className="space-y-2">
-                <div>
-                  <span className="font-semibold text-black">Base Material:</span>
-                  <span className="text-gray-800 ml-2 block sm:inline">Moisture Resistance ISI Grade Plywood</span>
-                </div>
-                <div>
-                  <span className="font-semibold text-black">Furniture Internal:</span>
-                  <span className="text-gray-800 ml-2 block sm:inline">0.8mm White Laminate</span>
-                </div>
-                <div>
-                  <span className="font-semibold text-black">Furniture Outside:</span>
-                  <span className="text-gray-800 ml-2 block sm:inline">1mm Color Laminate (₹1,000 - ₹1,400 per sheet)</span>
-                </div>
-              </div>
-            </div>
-            <div>
-              <div className="space-y-2">
-                <div>
-                  <span className="font-semibold text-black">Hardware:</span>
-                  <span className="text-gray-800 ml-2 block sm:inline">Ebco and Moda Germany (Normal Close)</span>
-                </div>
-                <div>
-                  <span className="font-semibold text-black">Paint:</span>
-                  <span className="text-gray-800 ml-2 block sm:inline">Asian Royal Paint - Royal Shine</span>
-                </div>
-                <div>
-                  <span className="font-semibold text-black">Electrical:</span>
-                  <span className="text-gray-800 ml-2 block sm:inline">Polycab Wire with Labour</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div> */}
 
         {/* Action Buttons */}
         <div className="p-3 sm:p-4 bg-white border-t-2 border-gray-200" data-html2canvas-ignore="true">
@@ -421,6 +433,136 @@ const EstimateStep: React.FC<EstimateStepProps> = ({
               <RotateCcw size={16} />
               New Estimate
             </button>
+          </div>
+        </div>
+        {/* Material Details */}
+        {/* <div className="p-3 sm:p-4 bg-gray-50 border-t-2 border-gray-200">
+          <h3 className="text-base sm:text-lg font-semibold text-black mb-3 sm:mb-4">
+            Material Details
+          </h3>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
+            <div>
+              <div className="space-y-2">
+                <div>
+                  <span className="font-semibold text-black">Base Material:</span>
+                  <span className="text-gray-800 ml-2 block sm:inline">Moisture Resistance ISI Grade Plywood</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-black">Furniture Internal:</span>
+                  <span className="text-gray-800 ml-2 block sm:inline">0.8mm White Laminate</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-black">Furniture Outside:</span>
+                  <span className="text-gray-800 ml-2 block sm:inline">1mm Color Laminate (₹1,000 - ₹1,400 per sheet)</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div className="space-y-2">
+                <div>
+                  <span className="font-semibold text-black">Hardware:</span>
+                  <span className="text-gray-800 ml-2 block sm:inline">Ebco and Moda Germany (Normal Close)</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-black">Paint:</span>
+                  <span className="text-gray-800 ml-2 block sm:inline">Asian Royal Paint - Royal Shine</span>
+                </div>
+                <div>
+                  <span className="font-semibold text-black">Electrical:</span>
+                  <span className="text-gray-800 ml-2 block sm:inline">Polycab Wire with Labour</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div> */}
+
+        {/* Feedback Section */}
+        <div className="p-3 sm:p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border-t-2 border-yellow-400">
+          <div className="text-center">
+            <h4 className="text-base sm:text-lg font-semibold text-gray-800 mb-3">
+              How was your experience?
+            </h4>
+            <p className="text-sm text-gray-600 mb-4">
+              We'd love to hear your feedback to improve our service
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-3">
+              <button
+                onClick={() => {
+                  console.log('Feedback: Excellent')
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg min-h-[40px] text-sm"
+              >
+                😊 Excellent
+              </button>
+              <button
+                onClick={() => {
+                  console.log('Feedback: Good')
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg min-h-[40px] text-sm"
+              >
+                👍 Good
+              </button>
+              <button
+                onClick={() => {
+                  console.log('Feedback: Fair')
+                }}
+                className="px-4 py-2 bg-yellow-500 text-white rounded-lg font-medium hover:bg-yellow-600 transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg min-h-[40px] text-sm"
+              >
+                😐 Fair
+              </button>
+              <button
+                onClick={() => {
+                  console.log('Feedback: Poor')
+                }}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg min-h-[40px] text-sm"
+              >
+                😞 Poor
+              </button>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 justify-center">
+              <button
+                onClick={() => {
+                  console.log('Feedback: Would recommend')
+                }}
+                className="px-4 py-2 bg-black text-yellow-400 rounded-lg font-medium hover:bg-gray-800 transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg min-h-[40px] text-sm"
+              >
+                ⭐ Would recommend
+              </button>
+              <button
+                onClick={() => {
+                  console.log('Feedback: Need improvements')
+                }}
+                className="px-4 py-2 bg-white text-gray-700 border-2 border-gray-300 rounded-lg font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 transform hover:-translate-y-1 min-h-[40px] text-sm"
+              >
+                🔧 Need improvements
+              </button>
+            </div>
+            
+            {/* Additional Comments Input */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Additional comments or suggestions (optional)
+              </label>
+              <textarea
+                placeholder="Tell us more about your experience, suggestions for improvement, or any other feedback..."
+                className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:border-yellow-400 transition-all duration-200 resize-none"
+                rows={3}
+                onChange={(e) => {
+                  console.log('Additional feedback:', e.target.value)
+                }}
+              />
+              <div className="flex justify-end mt-2">
+                <button
+                  onClick={() => {
+                    console.log('Submit feedback')
+                  }}
+                  className="px-4 py-2 bg-yellow-400 text-black rounded-lg font-medium hover:bg-yellow-500 transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg text-sm"
+                >
+                  Submit Feedback
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 

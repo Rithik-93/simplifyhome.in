@@ -20,6 +20,13 @@ export interface FurnitureItem {
   userPrice: number; // User input price
   basePrice: number; // Base price from CMS for estimated calculations
   pricePerSqFt: number; // Price per sq.ft from API
+  
+  // New AddonPricing structure for Add Ons items
+  addonPricing?: AddonPricing[];
+  
+  // User-entered dimensions for woodwork items
+  userDimensions?: { length: number; width: number };
+  
   totalPrice?: number; // Calculated as: userPrice × quantity
 }
 
@@ -50,13 +57,24 @@ export interface UserDetails {
   city: string;
 }
 
-export type RoomType = 'BHK_1' | 'BHK_2' | 'BHK_3' | 'BHK_4';
+export type RoomType = 'BHK_1' | 'BHK_2' | 'BHK_3' | 'BHK_4' | 'BHK_5' | 'BHK_6';
 
+// New AddonPricing interface to match backend schema
+export interface AddonPricing {
+  id: string;
+  itemId: string;
+  roomType: RoomType;
+  premiumPrice: number;
+  luxuryPrice: number;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+}
 
 export interface CMSType {
   id: string;
   name: string;
   categories?: CMSCategory[];
+  items?: CMSItem[];
   createdAt: string | Date;
   updatedAt: string | Date;
 }
@@ -76,10 +94,19 @@ export interface CMSItem {
   name: string;
   description?: string;
   availableInRooms: RoomType[];
-  pricePerSqFt: number;
+  
+  // Standard pricing (per sq ft) - for regular items
+  premiumPricePerSqFt?: number | null;
+  luxuryPricePerSqFt?: number | null;
+  
+  // New AddonPricing structure for Add Ons items
+  addonPricing?: AddonPricing[];
+  
   imageUrl?: string;
-  category: CMSCategory;
-  categoryId: string;
+  category?: CMSCategory | null;
+  categoryId?: string | null;
+  type?: CMSType | null;
+  typeId?: string | null;
   createdAt: string | Date;
   updatedAt: string | Date;
 }
@@ -106,9 +133,17 @@ export interface CreateItemRequest {
   name: string;
   description?: string;
   availableInRooms: RoomType[];
-  pricePerSqFt: number;
+  
+  // Standard pricing (per sq ft) - for regular items
+  premiumPricePerSqFt?: number | null;
+  luxuryPricePerSqFt?: number | null;
+  
+  // Add-on pricing for Add Ons items
+  addonPricing?: Omit<AddonPricing, 'id' | 'itemId' | 'createdAt' | 'updatedAt'>[];
+  
   imageUrl?: string;
-  categoryId: string;
+  categoryId?: string | null;
+  typeId?: string | null;
 }
 
 export interface UpdateItemRequest extends Partial<CreateItemRequest> {

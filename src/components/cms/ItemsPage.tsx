@@ -36,7 +36,7 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ categories = [], types = [] }) =>
   const [items, setItems] = useState<CMSItem[]>([])
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 10,
+    limit: 200,
     total: 0,
     totalPages: 0
   })
@@ -171,6 +171,8 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ categories = [], types = [] }) =>
               <option value="BHK_2">2 BHK</option>
               <option value="BHK_3">3 BHK</option>
               <option value="BHK_4">4 BHK</option>
+              <option value="BHK_5">5 BHK</option>
+              <option value="BHK_6">6 BHK</option>
             </Select>
             
             <Button variant="outline" className="flex items-center">
@@ -214,64 +216,105 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ categories = [], types = [] }) =>
                     <TableHead>Name</TableHead>
                     <TableHead>Category</TableHead>
                     <TableHead>Type</TableHead>
-                    <TableHead>Price/Sq Ft</TableHead>
+                    <TableHead>Pricing Type</TableHead>
+                    <TableHead>Premium Price</TableHead>
+                    <TableHead>Luxury Price</TableHead>
                     <TableHead>Room Types</TableHead>
                     <TableHead>Updated</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {items.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{item.name}</div>
-                      {item.description && (
-                        <div className="text-sm text-gray-500 truncate max-w-xs">
-                          {item.description}
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {item.category?.name || 'Unknown Category'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="capitalize">
-                      {item.category?.type?.name || 'Unknown Type'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>₹{item.pricePerSqFt.toLocaleString()}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {item.availableInRooms.map(roomType => (
-                        <Badge key={roomType} variant="secondary" className="text-xs">
-                          {roomType.replace('BHK_', '')} BHK
-                        </Badge>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell>{formatDate(item.updatedAt)}</TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <button 
-                        className="p-1 hover:bg-gray-100 rounded"
-                        onClick={() => handleDeleteItem(item.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-600" />
-                      </button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-                              </TableBody>
-                </Table>
-              </>
-            )}
-          </CardContent>
-        </Card>
+                  {items.map((item) => {
+                    const isAddonItem = item.addonPricing && item.addonPricing.length > 0;
+                    const hasPerSqFtPricing = item.premiumPricePerSqFt && item.luxuryPricePerSqFt;
+                    
+                    return (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">{item.name}</div>
+                            {item.description && (
+                              <div className="text-sm text-gray-500 truncate max-w-xs">
+                                {item.description}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {item.category?.name || 'No Category'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">
+                            {item.type?.name || item.category?.type?.name || 'Unknown Type'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={isAddonItem ? "secondary" : "default"}>
+                            {isAddonItem ? 'Addon' : 'Per Sq Ft'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {isAddonItem ? (
+                            <div className="text-sm">
+                              {item.addonPricing?.map((pricing, index) => (
+                                <div key={index} className="mb-1">
+                                  <span className="font-medium">{pricing.roomType.replace('BHK_', '')} BHK:</span>
+                                  <br />
+                                  <span className="text-gray-600">₹{pricing.premiumPrice.toLocaleString()}</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <span>₹{item.premiumPricePerSqFt?.toLocaleString() || '0'}/sq ft</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {isAddonItem ? (
+                            <div className="text-sm">
+                              {item.addonPricing?.map((pricing, index) => (
+                                <div key={index} className="mb-1">
+                                  <span className="font-medium">{pricing.roomType.replace('BHK_', '')} BHK:</span>
+                                  <br />
+                                  <span className="text-gray-600">₹{pricing.luxuryPrice.toLocaleString()}</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <span>₹{item.luxuryPricePerSqFt?.toLocaleString() || '0'}/sq ft</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex flex-wrap gap-1">
+                            {item.availableInRooms.map(roomType => (
+                              <Badge key={roomType} variant="secondary" className="text-xs">
+                                {roomType.replace('BHK_', '')} BHK
+                              </Badge>
+                            ))}
+                          </div>
+                        </TableCell>
+                        <TableCell>{formatDate(item.updatedAt)}</TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <button 
+                              className="p-1 hover:bg-gray-100 rounded"
+                              onClick={() => handleDeleteItem(item.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Item Form Modal */}
       {showForm && (
