@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { RotateCcw, Loader2, CheckCircle, XCircle } from 'lucide-react'
 import type { AppState, EstimateItem } from '../../types'
-import { getRoomDimensions, ROOM_DIMENSIONS } from '../../types'
+import { getRoomDimensions } from '../../types'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import api from '../../services/api'

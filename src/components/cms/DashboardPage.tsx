@@ -154,7 +154,6 @@ const DashboardPage: React.FC = () => {
               <TableBody>
                 {allItems.map((item: CMSItem) => {
                   const isAddonItem = item.addonPricing && item.addonPricing.length > 0;
-                  const hasPerSqFtPricing = item.premiumPricePerSqFt && item.luxuryPricePerSqFt;
                   
                   return (
                     <TableRow key={item.id}>

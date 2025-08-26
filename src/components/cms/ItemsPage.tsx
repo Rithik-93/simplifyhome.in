@@ -227,7 +227,6 @@ const ItemsPage: React.FC<ItemsPageProps> = ({ categories = [], types = [] }) =>
                 <TableBody>
                   {items.map((item) => {
                     const isAddonItem = item.addonPricing && item.addonPricing.length > 0;
-                    const hasPerSqFtPricing = item.premiumPricePerSqFt && item.luxuryPricePerSqFt;
                     
                     return (
                       <TableRow key={item.id}>
