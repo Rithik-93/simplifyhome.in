@@ -60,7 +60,16 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
     return groups;
   }, [items, homeDetails.homeType]);
 
-  const itemTypes = useMemo(() => Object.keys(groupedItems), [groupedItems]);
+  // Ensure Add Ons appears last by sorting types
+  const itemTypes = useMemo(() => {
+    const types = Object.keys(groupedItems);
+    return types.sort((a, b) => {
+      // Put Add Ons last
+      if (a === 'Add Ons') return 1;
+      if (b === 'Add Ons') return -1;
+      return 0;
+    });
+  }, [groupedItems]);
 
   // State for user-entered dimensions
   const [userDimensions, setUserDimensions] = useState<{[itemId: string]: {length: number, width: number}}>({})
@@ -110,7 +119,7 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
   // Calculate estimated price based on API price per sqft and user dimensions or carpet area
   const calculateEstimatedPrice = useCallback((item: FurnitureItem) => {
     const isAddOnsItem = item.type === 'Add Ons';
-    const isSingleLineItem = item.type === 'Single Line Items';
+    const isSingleLineItem = item.type === 'Single Line';
     
     if (isAddOnsItem) {
       return getDefaultAddOnsPrice(item);
@@ -139,7 +148,7 @@ const FurnitureStep: React.FC<FurnitureStepProps> = ({
     // If user price is 0, calculate estimated price per unit
     const estimatedTotal = calculateEstimatedPrice(item);
     const isAddOnsItem = item.type === 'Add Ons';
-    const isSingleLineItem = item.type === 'Single Line Items';
+    const isSingleLineItem = item.type === 'Single Line';
     
     if (isAddOnsItem) {
       return estimatedTotal; // Fixed price for add-ons
